@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/constants/supabase_constants.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/editorial_button.dart';
 import 'core/widgets/writtle_app_bar.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Supabase Client
+  await Supabase.initialize(
+    url: SupabaseConstants.supabaseUrl,
+    publishableKey: SupabaseConstants.supabasePublishableKey,
+  );
+
   runApp(
     const ProviderScope(
       child: WrittleApp(),
