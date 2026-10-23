@@ -238,3 +238,13 @@ USING (auth.uid() = user_id);
 CREATE POLICY "Authenticated users can submit a report" 
 ON public.reports FOR INSERT 
 WITH CHECK (auth.uid() = reporter_id);
+
+-- ==========================================================
+-- 10. ROLE GRANTS (Required for Supabase RLS to operate)
+-- ==========================================================
+
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL ROUTINES IN SCHEMA public TO anon, authenticated;
+
