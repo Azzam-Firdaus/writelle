@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/story_model.dart';
 import '../models/user_profile_model.dart';
@@ -45,12 +46,20 @@ class AuthRepository {
     required String password,
   }) async {
     final client = _supabase;
-    if (client == null) throw Exception('Database connection not initialized.');
+    if (client == null) {
+      throw Exception('Supabase belum diinisialisasi.');
+    }
 
-    return await client.auth.signInWithPassword(
+    final response = await client.auth.signInWithPassword(
       email: email.trim(),
       password: password,
     );
+
+    debugPrint('Login berhasil: ${response.user != null}');
+    debugPrint('Sesi tersedia: ${response.session != null}');
+    debugPrint('User aktif: ${client.auth.currentUser?.id != null}');
+
+    return response;
   }
 
   /// Sign out (FR-003)

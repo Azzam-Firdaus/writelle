@@ -104,6 +104,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
 
   @override
   Widget build(BuildContext context) {
+    // Re-render when auth state changes (login, logout, session refresh)
+    ref.watch(authStateProvider);
     final authRepo = ref.watch(authRepositoryProvider);
     final isAuth = authRepo.isAuthenticated;
 

@@ -5,6 +5,7 @@ import '../../core/theme/app_typography.dart';
 import '../../core/widgets/editorial_button.dart';
 import '../../core/widgets/writtle_app_bar.dart';
 import '../../providers/auth_provider.dart';
+import '../main_shell_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -32,32 +33,80 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     if (email.isEmpty || !email.contains('@')) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid email address.')),
+        const SnackBar(
+          content: Text('Masukkan alamat email yang valid.'),
+        ),
       );
       return;
     }
+
     if (password.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password must be at least 6 characters.')),
+        const SnackBar(
+          content: Text('Password minimal 6 karakter.'),
+        ),
       );
       return;
     }
+
+    if (_isLoading) return;
 
     setState(() => _isLoading = true);
 
     try {
       final authRepo = ref.read(authRepositoryProvider);
-      await authRepo.signIn(email: email, password: password);
-      ref.invalidate(currentUserProfileProvider);
-      if (mounted) Navigator.of(context).pop();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+
+      final response = await authRepo.signIn(
+        email: email,
+        password: password,
+      );
+
+      // Pastikan Supabase benar-benar membuat sesi.
+      if (response.user == null || response.session == null) {
+        throw Exception(
+          'Login belum menghasilkan sesi. Periksa konfirmasi email '
+          'dan konfigurasi autentikasi Supabase.',
         );
       }
+
+      // Verifikasi sesi aktif pada Supabase client.
+      final currentUser = authRepo.currentUser;
+
+      if (currentUser == null || currentUser.id != response.user!.id) {
+        throw Exception(
+          'Sesi login belum terdeteksi oleh aplikasi.',
+        );
+      }
+
+      // Segarkan data profil setelah login.
+      ref.invalidate(currentUserProfileProvider);
+
+      if (!mounted) return;
+
+      // Ganti halaman login dengan halaman utama.
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute<void>(
+          builder: (_) => const MainShellScreen(),
+        ),
+        (route) => false,
+      );
+    } catch (e, stackTrace) {
+      debugPrint('Writtle login error: $e');
+      debugPrintStack(stackTrace: stackTrace);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Login gagal: ${e.toString().replaceFirst('Exception: ', '')}',
+          ),
+        ),
+      );
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
