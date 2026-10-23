@@ -2,16 +2,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:writtle/main.dart';
 
 void main() {
-  testWidgets('WrittleApp smoke test loads brand title and tagline', (tester) async {
+  testWidgets('WrittleApp smoke test loads brand title, navigation, and write action', (tester) async {
     await tester.pumpWidget(const WrittleApp());
     await tester.pump();
 
-    // Verify brand title and tagline are displayed
+    // Verify brand title in app bar
     expect(find.text('Writtle'), findsOneWidget);
-    expect(
-      find.text('“Your story matters, even when your name doesn’t.”'),
-      findsOneWidget,
-    );
-    expect(find.text('Explore Stories'), findsOneWidget);
+
+    // Verify Write FAB is visible
+    expect(find.text('Write'), findsOneWidget);
+
+    // Verify bottom navigation bar tabs
+    expect(find.text('Stories'), findsOneWidget);
+    expect(find.text('Saved'), findsOneWidget);
+    expect(find.text('Profile'), findsOneWidget);
   });
 }
