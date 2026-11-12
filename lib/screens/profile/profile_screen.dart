@@ -862,98 +862,281 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
       onRefresh: () async {
         ref.invalidate(myTrashStoriesProvider);
       },
-      child: trashAsync.when(
-        skipLoadingOnReload: true,
-        skipLoadingOnRefresh: true,
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.burntSienna),
-        ),
-        error: (err, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.error_outline, color: AppColors.error, size: 36),
-                const SizedBox(height: 12),
-                Text(
-                  'Could not load trash',
-                  style: AppTypography.storyHeading.copyWith(fontSize: 16, color: AppColors.espresso),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '$err',
-                  textAlign: TextAlign.center,
-                  style: AppTypography.captionMeta.copyWith(color: AppColors.mutedCocoa, fontSize: 12),
-                  maxLines: 4,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: () => ref.invalidate(myTrashStoriesProvider),
-                  icon: const Icon(Icons.refresh, size: 16),
-                  label: const Text('Try Again'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.burntSienna,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        data: (stories) {
-          if (stories.isEmpty) {
-            return const EmptyStateWidget(
-              icon: Icons.delete_outline,
-              title: 'Trash is clear',
-              message: 'Tales deleted by you are preserved for 14 days before permanent erasure.',
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.only(top: 8, bottom: 32),
-            itemCount: stories.length,
-            itemBuilder: (context, index) {
-              final story = stories[index];
-              final daysLeft = story.daysUntilPermanentDeletion;
-
-              return StoryCard(
-                key: ValueKey('trash_${story.id}'),
-                story: story,
-                showActions: false,
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.error.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
+      child: Column(
+        children: [
+          _buildTrashInfoBanner(),
+          Expanded(
+            child: trashAsync.when(
+              skipLoadingOnReload: true,
+              skipLoadingOnRefresh: true,
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: AppColors.burntSienna),
+              ),
+              error: (err, _) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.error_outline, color: AppColors.error, size: 36),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Could not load trash',
+                        style: AppTypography.storyHeading.copyWith(fontSize: 16, color: AppColors.espresso),
                       ),
-                      child: Text(
-                        '${daysLeft}d left',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.error,
+                      const SizedBox(height: 6),
+                      Text(
+                        '$err',
+                        textAlign: TextAlign.center,
+                        style: AppTypography.captionMeta.copyWith(color: AppColors.mutedCocoa, fontSize: 12),
+                        maxLines: 4,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: () => ref.invalidate(myTrashStoriesProvider),
+                        icon: const Icon(Icons.refresh, size: 16),
+                        label: const Text('Try Again'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.burntSienna,
+                          foregroundColor: Colors.white,
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 4),
-                    IconButton(
-                      icon: const Icon(Icons.restore_outlined, size: 20, color: AppColors.success),
-                      tooltip: 'Restore Tale',
-                      onPressed: () => _confirmRestoreStory(story),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-                onTap: () => _confirmRestoreStory(story),
-              );
-            },
-          );
-        },
+              ),
+              data: (stories) {
+                if (stories.isEmpty) {
+                  return const EmptyStateWidget(
+                    icon: Icons.auto_delete_outlined,
+                    title: 'Your Trash is Empty',
+                    message: 'Tales deleted by you are preserved here for 14 days before permanent erasure. During this grace window, only you can see and restore them.',
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.only(top: 4, bottom: 32),
+                  itemCount: stories.length,
+                  itemBuilder: (context, index) {
+                    final story = stories[index];
+                    final daysLeft = story.daysUntilPermanentDeletion;
+
+                    return StoryCard(
+                      key: ValueKey('trash_${story.id}'),
+                      story: story,
+                      showActions: false,
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Tooltip(
+                            message: '$daysLeft days left before permanent erasure',
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppColors.error.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.timer_outlined, size: 12, color: AppColors.error),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${daysLeft}d left',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.error,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          IconButton(
+                            icon: const Icon(Icons.restore_outlined, size: 20, color: AppColors.success),
+                            tooltip: 'Restore Tale',
+                            onPressed: () => _confirmRestoreStory(story),
+                          ),
+                        ],
+                      ),
+                      onTap: () => _confirmRestoreStory(story),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildTrashInfoBanner() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.burntSienna.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.burntSienna.withValues(alpha: 0.22),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.shield_outlined,
+                color: AppColors.burntSienna,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Private 14-Day Retention Sanctuary',
+                  style: AppTypography.uiBodyMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: AppColors.burntSienna,
+                  ),
+                ),
+              ),
+              InkWell(
+                onTap: _showTrashRetentionInfoDialog,
+                borderRadius: BorderRadius.circular(12),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Policy Details',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.burntSienna,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                      SizedBox(width: 2),
+                      Icon(Icons.chevron_right, size: 14, color: AppColors.burntSienna),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Tales you erase remain strictly private to your account and hidden from the public sanctuary. You have 14 days to restore them before they are permanently purged.',
+            style: AppTypography.captionMeta.copyWith(
+              fontSize: 12,
+              color: AppColors.espresso.withValues(alpha: 0.85),
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTrashRetentionInfoDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface(context),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.info_outline_rounded, color: AppColors.burntSienna),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                '14-Day Retention Policy',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildTrashPolicyRow(
+                icon: Icons.lock_outline,
+                title: 'Strict Account Privacy',
+                desc: 'Only you can see this trash tab. Other users, readers, and public searches cannot discover or read these tales.',
+              ),
+              const SizedBox(height: 12),
+              _buildTrashPolicyRow(
+                icon: Icons.timer_outlined,
+                title: '14-Day Grace Window',
+                desc: 'Stories remain recoverable for exactly 14 days from the moment they are deleted. The days remaining are displayed on each card.',
+              ),
+              const SizedBox(height: 12),
+              _buildTrashPolicyRow(
+                icon: Icons.restore_rounded,
+                title: 'One-Tap Restoration',
+                desc: 'Tap the green restore icon at any time to return the tale back to your Writings or Drafts.',
+              ),
+              const SizedBox(height: 12),
+              _buildTrashPolicyRow(
+                icon: Icons.gavel_outlined,
+                title: 'Curator Moderation Separation',
+                desc: 'Tales removed by curators for safety policy violations do not enter your personal trash and cannot be restored here.',
+              ),
+              const SizedBox(height: 12),
+              _buildTrashPolicyRow(
+                icon: Icons.auto_delete_outlined,
+                title: 'Permanent Automated Purge',
+                desc: 'Once the 14-day window expires, tales are irreversibly deleted from servers in compliance with data privacy regulations.',
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.burntSienna,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Understood'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrashPolicyRow({required IconData icon, required String title, required String desc}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 18, color: AppColors.burntSienna),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                desc,
+                style: const TextStyle(fontSize: 12, height: 1.35, color: AppColors.mutedCocoa),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
