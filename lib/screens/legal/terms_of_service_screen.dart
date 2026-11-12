@@ -121,7 +121,7 @@ class TermsOfServiceScreen extends StatelessWidget {
 
                       _buildTitle('8. Kontak Dukungan'),
                       _buildParagraph(
-                        'Untuk pertanyaan atau aduan terkait ketentuan layanan, silakan hubungi tim pengembang kami di isamualfian2@gmail.com.',
+                        'Untuk pertanyaan atau aduan terkait ketentuan layanan, silakan hubungi tim pengembang kami di mazzamfirdaus06@gmail.com.',
                       ),
                     ],
                   ),

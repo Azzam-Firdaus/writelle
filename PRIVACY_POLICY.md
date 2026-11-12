@@ -178,5 +178,5 @@ Apabila Anda memiliki pertanyaan, keluhan, masukan, atau hendak mengajukan permo
 
 - **Nama Aplikasi:** Writelle
 - **Pengembang:** Writelle Sanctuary Team
-- **Email Dukungan & Kepatuhan Privasi:** `privacy@writelle.app` *(atau kontak email resmi akun Google Play Developer Anda)*
+- **Email Dukungan & Kepatuhan Privasi:** `mazzamfirdaus06@gmail.com`
 - **Alamat Portal Dukungan Web:** `https://writelle.pages.dev`

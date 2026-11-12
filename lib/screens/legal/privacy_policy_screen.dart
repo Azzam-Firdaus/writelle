@@ -156,7 +156,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
 
                       _buildTitle('13. Hubungi Kami'),
                       _buildParagraph(
-                        'Jika Anda memiliki pertanyaan, masukan, atau permohonan terkait data privasi Anda di Writelle, silakan hubungi kami melalui:\n• Email Pengembang: isamualfian2@gmail.com\n• Aplikasi: Writelle Sanctuary Platform',
+                        'Jika Anda memiliki pertanyaan, masukan, atau permohonan terkait data privasi Anda di Writelle, silakan hubungi kami melalui:\n• Email Pengembang: mazzamfirdaus06@gmail.com\n• Aplikasi: Writelle Sanctuary Platform',
                       ),
                     ],
                   ),
