@@ -25,7 +25,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'Kebijakan Privasi',
+          'Privacy Policy',
           style: AppTypography.storyHeading.copyWith(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -52,7 +52,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                       border: Border.all(color: AppColors.borderColor(context)),
                     ),
                     child: Text(
-                      'Versi $policyVersion • Pembaruan: $lastUpdated',
+                      'Version $policyVersion • Updated: $lastUpdated',
                       style: AppTypography.captionMeta.copyWith(
                         fontSize: 11,
                         color: AppColors.burntSienna,
@@ -70,93 +70,93 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildTitle('1. Pendahuluan'),
+                      _buildTitle('1. Introduction'),
                       _buildParagraph(
-                        'Selamat datang di Writelle ("Aplikasi"). Writelle adalah wadah literatur dan suaka kata yang mengedepankan ketenangan, kejujuran berekspresi, dan privasi pembaca serta penulis. Kami menghormati hak privasi Anda dan berkomitmen untuk melindungi data pribadi yang Anda percayakan kepada kami.',
+                        'Welcome to Writelle ("Application", "We", "Our"). Writelle is a contemplative literature haven and pseudonymous writing sanctuary dedicated to mindful slow reading, honest expression, and user privacy. We deeply respect your privacy and are committed to safeguarding the personal data you entrust to us.',
                       ),
                       const SizedBox(height: 18),
 
-                      _buildTitle('2. Data yang Kami Kumpulkan'),
+                      _buildTitle('2. Information We Collect'),
                       _buildParagraph(
-                        'Writelle hanya mengumpulkan informasi yang esensial untuk menyediakan layanan storytelling yang aman dan nyaman:',
+                        'Writelle collects only the essential data necessary to provide a serene and secure literary experience:',
                       ),
-                      _buildBullet('Informasi Akun:', 'Alamat email dan kata sandi terenkripsi saat Anda mendaftar akun.'),
-                      _buildBullet('Profil Pseudonim:', 'Nama pena (pen name), kutipan biografi opsional, dan foto avatar opsional yang Anda pilih secara sukarela.'),
-                      _buildBullet('Konten Pengguna (UGC):', 'Kisah, tulisan, judul, pilihan kategori, serta komentar yang Anda unggah ke suaka.'),
-                      _buildBullet('Interaksi Suaka:', 'Data tanda suka (apresiasi), simpanan (bookmark), serta relasi pembaca (readers & following).'),
-                      _buildBullet('Pilihan Privasi:', 'Status penulisan anonim (Pure Anonymity) yang Anda aktifkan pada cerita tertentu.'),
+                      _buildBullet('Account Credentials:', 'Email address and encrypted password generated upon account registration.'),
+                      _buildBullet('Pseudonymous Profile:', 'Pen name (display name), optional biography quotes, and optional avatar images uploaded by the user.'),
+                      _buildBullet('User-Generated Content (UGC):', 'Tales, reflective writings, titles, category tags, and comments you inscribe to the sanctuary.'),
+                      _buildBullet('Sanctuary Interactions:', 'Story likes (appreciations), keepsakes (bookmarks), and reader associations (readers & following counts).'),
+                      _buildBullet('Privacy Preferences:', 'Pure Anonymity publication mode to conceal author identity on select tales.'),
                       const SizedBox(height: 18),
 
-                      _buildTitle('3. Cara Kami Mengumpulkan Informasi'),
+                      _buildTitle('3. How We Collect Information'),
                       _buildParagraph(
-                        'Kami mengumpulkan informasi secara langsung saat Anda mendaftarkan diri, memperbarui profil, menuliskan kisah, atau memberikan apresiasi pada karya penulis lain. Jika Anda memilih masuk menggunakan Google OAuth, kami menerima nama dan alamat email yang Anda otorisasi.',
-                      ),
-                      const SizedBox(height: 18),
-
-                      _buildTitle('4. Tujuan dan Penggunaan Data'),
-                      _buildParagraph(
-                        'Data yang terkumpul digunakan semata-mata untuk:',
-                      ),
-                      _buildBullet('Layanan Inti:', 'Mengotentikasi akun, menyajikan linimasa cerita, dan menampilkan karya Anda.'),
-                      _buildBullet('Privasi Terjaga:', 'Menyamarkan nama dan avatar Anda saat Anda mengaktifkan mode publikasi anonim.'),
-                      _buildBullet('Keamanan Suaka:', 'Memoderasi konten yang melanggar aturan dan memproses laporan komunitas.'),
-                      _buildBullet('Tidak Ada Iklan Pihak Ketiga:', 'Kami TIDAK menjual data Anda kepada broker data, pengiklan, atau pihak komersial mana pun.'),
-                      const SizedBox(height: 18),
-
-                      _buildTitle('5. Penyimpanan dan Keamanan Data'),
-                      _buildParagraph(
-                        'Data disimpan secara aman menggunakan infrastruktur Supabase (PostgreSQL) dengan standar enkripsi industri SSL/TLS saat transit data dan enkripsi at-rest. Akses data dibatasi secara ketat menggunakan Row Level Security (RLS) pada tingkat basis data.',
+                        'We collect data directly when you register, personalize your sanctuary profile, compose stories, or appreciate works by other authors. If you choose to authenticate via Google Sign-In, we receive only your verified email address and basic profile identifier.',
                       ),
                       const SizedBox(height: 18),
 
-                      _buildTitle('6. Pembagian Data & Layanan Pihak Ketiga'),
+                      _buildTitle('4. Purpose and Use of Data'),
                       _buildParagraph(
-                        'Kami tidak membagikan informasi pribadi Anda kepada pihak luar, kecuali untuk mitra infrastruktur esensial berikut:',
+                        'The information gathered is utilized strictly to:',
                       ),
-                      _buildBullet('Supabase Inc:', 'Penyedia infrastruktur otentikasi dan basis data terenkripsi.'),
-                      _buildBullet('Google Identity (Opsional):', 'Hanya diproses saat Anda secara sadar memilih masuk via Google Sign-In.'),
+                      _buildBullet('Core Services:', 'Authenticate accounts, deliver contemplative feeds, and present your authored works.'),
+                      _buildBullet('Identity Protection:', 'Conceal your pen name and avatar whenever you activate anonymous publishing.'),
+                      _buildBullet('Community Safety:', 'Moderate abusive content and process community violation reports swiftly.'),
+                      _buildBullet('No Third-Party Advertising:', 'We NEVER sell or monetize your data with third-party advertisers, data brokers, or commercial marketing firms.'),
                       const SizedBox(height: 18),
 
-                      _buildTitle('7. Penyimpanan Sesi & SharedPreferences'),
+                      _buildTitle('5. Data Storage and Security'),
                       _buildParagraph(
-                        'Aplikasi menggunakan penyimpanan lokal perangkat (SharedPreferences) untuk menyimpan token sesi terenkripsi agar Anda tidak perlu masuk berulang kali, serta menyimpan preferensi tampilan lokal. Kami tidak menggunakan cookie pelacak iklan pihak ketiga.',
-                      ),
-                      const SizedBox(height: 18),
-
-                      _buildTitle('8. Retensi Data & Tempat Sampah 14 Hari'),
-                      _buildBullet('Kisah Dihapus:', 'Cerita yang dihapus oleh penulis atau kurator akan disimpan sementara di ruang karantina (Trash) selama 14 hari untuk pemulihan darurat sebelum dihapus secara permanen dari server.'),
-                      _buildBullet('Akun Aktif:', 'Data profil dan karya aktif disimpan selama akun Anda berstatus aktif.'),
-                      const SizedBox(height: 18),
-
-                      _buildTitle('9. Hak Privasi Anda'),
-                      _buildParagraph(
-                        'Anda memiliki hak penuh untuk mengakses, memperbarui nama pena, mengganti avatar, menyunting karya, atau menghapus seluruh tulisan Anda sewaktu-waktu melalui aplikasi.',
+                        'All data is securely stored within Supabase managed PostgreSQL infrastructure utilizing industry-standard TLS 1.2/1.3 encryption in transit and AES-256 encryption at rest. Database access is strictly governed by granular PostgreSQL Row-Level Security (RLS) policies.',
                       ),
                       const SizedBox(height: 18),
 
-                      _buildTitle('10. Hak Penghapusan Akun (Account Deletion)'),
+                      _buildTitle('6. Third-Party Service Providers'),
                       _buildParagraph(
-                        'Sesuai kebijakan Google Play Store, Anda berhak menghapus akun Anda beserta seluruh data pribadi terkait kapan pun:',
+                        'We do not share your personal information with external parties, except for essential infrastructure providers:',
                       ),
-                      _buildBullet('Di Dalam Aplikasi:', 'Masuk ke menu Profil > Ketuk ikon kunci/setelan di pojok kanan atas > Pilih "Hapus Akun & Data Suaka". Seluruh data profil, kisah, dan data otentikasi akan dihapus permanen.'),
-                      _buildBullet('Permohonan Luar Aplikasi (Web):', 'Jika Anda tidak dapat mengakses aplikasi, Anda dapat mengajukan permohonan penghapusan akun melalui formulir web resmi kami atau mengirimkan email ke kontak pengembang kami.'),
+                      _buildBullet('Supabase Inc.:', 'Backend-as-a-Service infrastructure handling encrypted databases, authentication, and media storage.'),
+                      _buildBullet('Google Identity (Optional):', 'Employed solely when you explicitly choose to authenticate via Google Sign-In.'),
                       const SizedBox(height: 18),
 
-                      _buildTitle('11. Privasi Anak-Anak'),
+                      _buildTitle('7. Local Device Storage and Sessions'),
                       _buildParagraph(
-                        'Writelle tidak ditujukan untuk anak-anak di bawah usia 13 tahun. Kami tidak secara sadar mengumpulkan data anak di bawah 13 tahun. Jika Anda adalah orang tua/wali dan mengetahui anak Anda memberikan data pribadi, silakan hubungi kami untuk penghapusan segera.',
-                      ),
-                      const SizedBox(height: 18),
-
-                      _buildTitle('12. Perubahan Kebijakan Privasi'),
-                      _buildParagraph(
-                        'Kami dapat memperbarui kebijakan privasi ini dari waktu ke waktu. Pembaruan akan ditampilkan di halaman ini dengan tanggal revisi terbaru.',
+                        'The application utilizes secure local device storage (SharedPreferences) to cache your authentication session token, reading theme preferences, and locally blocked author lists. We do not use third-party tracking cookies or advertising SDKs.',
                       ),
                       const SizedBox(height: 18),
 
-                      _buildTitle('13. Hubungi Kami'),
+                      _buildTitle('8. Data Retention & 14-Day Trash Window'),
+                      _buildBullet('Quarantined Tales:', 'Stories deleted by authors or curators are placed into a soft-deleted quarantine state for a grace window of 14 calendar days for emergency restoration, after which they are permanently and irreversibly purged from our database.'),
+                      _buildBullet('Active Accounts:', 'Active profiles and published tales are preserved for as long as your account remains active.'),
+                      const SizedBox(height: 18),
+
+                      _buildTitle('9. Your Privacy Rights'),
                       _buildParagraph(
-                        'Jika Anda memiliki pertanyaan, masukan, atau permohonan terkait data privasi Anda di Writelle, silakan hubungi kami melalui:\n• Email Pengembang: mazzamfirdaus06@gmail.com\n• Aplikasi: Writelle Sanctuary Platform',
+                        'You maintain complete autonomy to access, update your pen name, change your avatar, edit your manuscripts, or erase your writings at any time through the application.',
+                      ),
+                      const SizedBox(height: 18),
+
+                      _buildTitle('10. Account & Data Deletion Rights'),
+                      _buildParagraph(
+                        'In full compliance with Google Play Store policies and international data privacy regulations (GDPR, CCPA, CalOPPA), you have the absolute right to request the permanent deletion of your account and all associated data at any time:',
+                      ),
+                      _buildBullet('In-App Deletion:', 'Open Profile > Tap the gear icon in the top right > Select "Delete Sanctuary Account". Your profile, published tales, comments, and authentication records are permanently erased immediately.'),
+                      _buildBullet('Web Deletion Portal:', 'If you cannot access the app, you may submit an account erasure request via our public web portal or by emailing our developer contact directly.'),
+                      const SizedBox(height: 18),
+
+                      _buildTitle('11. Children\'s Privacy'),
+                      _buildParagraph(
+                        'Writelle is not intended for children under 13 years of age. We do not knowingly collect personal data from anyone under the age of 13. If you are a parent or guardian and discover that your child has provided us with personal information, please contact us immediately for prompt deletion.',
+                      ),
+                      const SizedBox(height: 18),
+
+                      _buildTitle('12. Changes to This Privacy Policy'),
+                      _buildParagraph(
+                        'We may update this Privacy Policy from time to time. Any revisions will be reflected on this page with an updated effective date.',
+                      ),
+                      const SizedBox(height: 18),
+
+                      _buildTitle('13. Contact Us'),
+                      _buildParagraph(
+                        'If you have any questions, feedback, or data privacy requests regarding this Privacy Policy or your personal information, please contact us at:\n• Developer Email: mazzamfirdaus06@gmail.com\n• Platform: Writelle Sanctuary',
                       ),
                     ],
                   ),

@@ -242,7 +242,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
         backgroundColor: AppColors.surface(context),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'Sisipkan Tautan (Link)',
+          'Insert Link',
           style: AppTypography.storyHeading.copyWith(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         content: Column(
@@ -251,15 +251,15 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
             TextField(
               controller: labelController,
               decoration: const InputDecoration(
-                labelText: 'Teks Tautan',
-                hintText: 'Judul atau label tautan',
+                labelText: 'Link Text',
+                hintText: 'Title or display label',
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: urlController,
               decoration: const InputDecoration(
-                labelText: 'URL Tautan',
+                labelText: 'Link URL',
                 hintText: 'https://example.com',
               ),
               keyboardType: TextInputType.url,
@@ -269,7 +269,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Batal'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -292,7 +292,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
               }
               Navigator.of(ctx).pop();
             },
-            child: const Text('Sisipkan'),
+            child: const Text('Insert'),
           ),
         ],
       ),
@@ -330,7 +330,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
                     const Icon(Icons.text_format, color: AppColors.burntSienna, size: 22),
                     const SizedBox(width: 8),
                     Text(
-                      'Format Penulisan (Styling)',
+                      'Text Formatting',
                       style: AppTypography.storyHeading.copyWith(
                         fontSize: 17,
                         fontWeight: FontWeight.bold,
@@ -346,7 +346,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
                   children: [
                     _buildQuickFormatPill(
                       icon: Icons.border_color,
-                      label: 'Stabilo (Highlight)',
+                      label: 'Highlight',
                       onTap: () {
                         HapticFeedback.lightImpact();
                         _contentController.toggleStabilo();
@@ -355,7 +355,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
                     ),
                     _buildQuickFormatPill(
                       icon: Icons.title,
-                      label: 'Judul Bagian (H2)',
+                      label: 'Section Heading (H2)',
                       onTap: () {
                         HapticFeedback.lightImpact();
                         _contentController.toggleHeading();
@@ -364,7 +364,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
                     ),
                     _buildQuickFormatPill(
                       icon: Icons.format_bold,
-                      label: 'Tebal (Bold)',
+                      label: 'Bold',
                       onTap: () {
                         HapticFeedback.lightImpact();
                         _contentController.toggleBold();
@@ -373,7 +373,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
                     ),
                     _buildQuickFormatPill(
                       icon: Icons.format_italic,
-                      label: 'Miring (Italic)',
+                      label: 'Italic',
                       onTap: () {
                         HapticFeedback.lightImpact();
                         _contentController.toggleItalic();
@@ -430,17 +430,17 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
           backgroundColor: AppColors.surface(context),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Text(
-            'Keluar dari Mode Artikel?',
+            'Exit Story Mode?',
             style: AppTypography.storyHeading.copyWith(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          content: const Text('Apakah Anda ingin menyimpan draf tulisan Anda sebelum keluar?'),
+          content: const Text('Would you like to save your draft before departing?'),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(ctx).pop();
                 Navigator.of(context).pop();
               },
-              child: const Text('Buang', style: TextStyle(color: AppColors.error)),
+              child: const Text('Discard', style: TextStyle(color: AppColors.error)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -451,7 +451,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
                 Navigator.of(ctx).pop();
                 _handleSave(isDraft: true);
               },
-              child: const Text('Simpan Draf'),
+              child: const Text('Save Draft'),
             ),
           ],
         ),
@@ -472,19 +472,19 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
     if (!isDraft) {
       if (title.length < 3) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Judul cerita memerlukan minimal 3 karakter.')),
+          const SnackBar(content: Text('Story title requires at least 3 characters.')),
         );
         return;
       }
       if (body.length < 20) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Isi cerita memerlukan minimal 20 karakter.')),
+          const SnackBar(content: Text('Story content requires at least 20 characters.')),
         );
         return;
       }
       if (_selectedCategoryId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Silakan pilih topik/kategori cerita Anda.')),
+          const SnackBar(content: Text('Please select a category for your tale.')),
         );
         return;
       }
@@ -538,7 +538,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                isDraft ? 'Draf berhasil disimpan dengan tenang.' : 'Karya cerita berhasil diperbarui!',
+                isDraft ? 'Draft saved peacefully.' : 'Tale updated successfully!',
               ),
             ),
           );
@@ -568,7 +568,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              isDraft ? 'Draf berhasil disimpan dengan tenang.' : 'Kisah Anda telah dibagikan ke sanctuary!',
+              isDraft ? 'Draft saved peacefully.' : 'Your tale has been shared with the sanctuary!',
             ),
           ),
         );
@@ -622,7 +622,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Preview Mode — Beginilah tampilan cerita Anda saat dibaca.',
+                    'Preview Mode — This is how your tale appears to readers.',
                     style: AppTypography.captionMeta.copyWith(
                       color: AppColors.textPrimaryColor(context),
                       fontWeight: FontWeight.w600,
@@ -741,7 +741,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
           onPressed: _handleExitMode,
         ),
         title: Text(
-          _isPreview ? 'Pratinjau Cerita' : 'Tulis Artikel',
+          _isPreview ? 'Story Preview' : 'Inscribe Tale',
           style: AppTypography.storyHeading.copyWith(
             fontSize: 17,
             fontWeight: FontWeight.bold,
@@ -756,10 +756,10 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
               size: 20,
               color: AppColors.burntSienna,
             ),
-            tooltip: _isPreview ? 'Edit' : 'Pratinjau',
+            tooltip: _isPreview ? 'Edit' : 'Preview',
             onPressed: () => setState(() => _isPreview = !_isPreview),
           ),
-          // Draf Button
+          // Draft Button
           TextButton(
             onPressed: _isSavingDraft || _isPublishing ? null : () => _handleSave(isDraft: true),
             child: _isSavingDraft
@@ -769,7 +769,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.burntSienna),
                   )
                 : Text(
-                    'Draf',
+                    'Draft',
                     style: AppTypography.uiBodyMedium.copyWith(
                       color: AppColors.textSecondaryColor(context),
                       fontWeight: FontWeight.w600,
@@ -778,7 +778,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
                   ),
           ),
           const SizedBox(width: 4),
-          // Terbitkan Button
+          // Publish Button
           Padding(
             padding: const EdgeInsets.only(right: 12.0),
             child: ElevatedButton(
@@ -793,12 +793,12 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
               onPressed: _isSavingDraft || _isPublishing ? null : () => _handleSave(isDraft: false),
               child: _isPublishing
                   ? const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                    )
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
                   : const Text(
-                      'Terbitkan',
+                      'Publish',
                       style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
                     ),
             ),
@@ -848,7 +848,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
                               isExpanded: true,
                               dropdownColor: AppColors.surface(context),
                               hint: Text(
-                                'Pilih Kategori Cerita',
+                                'Select Tale Category',
                                 style: AppTypography.uiBodyMedium.copyWith(
                                   color: AppColors.textSecondaryColor(context),
                                 ),
@@ -890,7 +890,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
                       textCapitalization: TextCapitalization.sentences,
                       maxLines: null,
                       decoration: InputDecoration(
-                        hintText: 'Judul',
+                        hintText: 'Title',
                         hintStyle: TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.bold,
@@ -917,7 +917,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
                       textCapitalization: TextCapitalization.sentences,
                       maxLines: null,
                       decoration: InputDecoration(
-                        hintText: 'Tambahkan subjudul...',
+                        hintText: 'Add a subtitle...',
                         hintStyle: TextStyle(
                           fontSize: 16,
                           color: AppColors.textTertiaryColor(context).withValues(alpha: 0.6),
@@ -946,7 +946,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
                       maxLines: null,
                       minLines: 12,
                       decoration: InputDecoration(
-                        hintText: 'Mulai menulis artikel...',
+                        hintText: 'Begin penning your tale...',
                         hintStyle: TextStyle(
                           fontSize: 17.5,
                           height: 1.8,
@@ -1107,7 +1107,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
               Icon(Icons.add_photo_alternate_outlined, size: 30, color: AppColors.burntSienna),
               SizedBox(height: 6),
               Text(
-                'Pilih Sampul Cerita (16:9)',
+                'Choose Cover Image (16:9)',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -1116,7 +1116,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
               ),
               SizedBox(height: 2),
               Text(
-                'Mendukung fitur pemotongan / cropping foto',
+                'Supports 16:9 image cropping',
                 style: TextStyle(
                   fontSize: 11,
                   color: AppColors.mutedCocoa,
@@ -1162,7 +1162,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
                   Icon(Icons.undo, size: 16, color: AppColors.textPrimaryColor(context)),
                   const SizedBox(width: 8),
                   Text(
-                    'Keluar dari mode artikel',
+                    'Exit story mode',
                     style: AppTypography.uiBodyMedium.copyWith(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w600,
@@ -1217,14 +1217,14 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
               // 2. Link Icon
               IconButton(
                 icon: Icon(Icons.link, color: AppColors.textPrimaryColor(context), size: 24),
-                tooltip: 'Sisipkan Tautan',
+                tooltip: 'Insert Link',
                 onPressed: _showInsertLinkDialog,
               ),
 
               // 3. Bullet List Icon
               IconButton(
                 icon: Icon(Icons.format_list_bulleted, color: AppColors.textPrimaryColor(context), size: 24),
-                tooltip: 'Daftar Poin',
+                tooltip: 'Bullet List',
                 onPressed: () {
                   HapticFeedback.lightImpact();
                   _contentController.toggleBulletList();
@@ -1234,7 +1234,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
               // 4. Quote Icon
               IconButton(
                 icon: Icon(Icons.format_quote_rounded, color: AppColors.textPrimaryColor(context), size: 24),
-                tooltip: 'Kutipan (Quote)',
+                tooltip: 'Quote Block',
                 onPressed: () {
                   HapticFeedback.lightImpact();
                   _contentController.toggleQuote();
@@ -1254,7 +1254,7 @@ class _StoryEditorScreenState extends ConsumerState<StoryEditorScreen> {
               // 6. Styling / Format Penulisan Icon (menggantikan sembunyikan keyboard)
               IconButton(
                 icon: Icon(Icons.text_format, color: AppColors.textPrimaryColor(context), size: 26),
-                tooltip: 'Format Penulisan',
+                tooltip: 'Text Formatting',
                 onPressed: _showFormattingStyleSheet,
               ),
             ],

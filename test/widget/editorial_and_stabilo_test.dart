@@ -179,11 +179,11 @@ void main() {
       );
 
       // Verify all tools exist
-      expect(find.text('Stabilo'), findsOneWidget);
-      expect(find.text('Kutipan'), findsOneWidget);
-      expect(find.text('Subjudul'), findsOneWidget);
-      expect(find.text('Tebal'), findsOneWidget);
-      expect(find.text('Miring'), findsOneWidget);
+      expect(find.text('Highlight'), findsOneWidget);
+      expect(find.text('Quote'), findsOneWidget);
+      expect(find.text('Heading'), findsOneWidget);
+      expect(find.text('Bold'), findsOneWidget);
+      expect(find.text('Italic'), findsOneWidget);
       expect(find.byIcon(Icons.keyboard_hide_outlined), findsOneWidget);
 
       // Test tapping dismiss keyboard

@@ -62,8 +62,8 @@ class WrittleKeyboardAccessoryBar extends StatelessWidget {
                   _buildToolButton(
                     context: context,
                     icon: Icons.border_color,
-                    label: 'Stabilo',
-                    tooltip: 'Sorot teks pilihan dengan stabilo (==teks==)',
+                    label: 'Highlight',
+                    tooltip: 'Highlight selected text (==text==)',
                     isStabilo: true,
                     onTap: () {
                       HapticFeedback.lightImpact();
@@ -76,8 +76,8 @@ class WrittleKeyboardAccessoryBar extends StatelessWidget {
                   _buildToolButton(
                     context: context,
                     icon: Icons.format_quote_rounded,
-                    label: 'Kutipan',
-                    tooltip: 'Jadikan kutipan dengan garis aksen (> kutipan)',
+                    label: 'Quote',
+                    tooltip: 'Format quote with accent border (> quote)',
                     onTap: () {
                       HapticFeedback.lightImpact();
                       controller.toggleQuote();
@@ -89,8 +89,8 @@ class WrittleKeyboardAccessoryBar extends StatelessWidget {
                   _buildToolButton(
                     context: context,
                     icon: Icons.title_rounded,
-                    label: 'Subjudul',
-                    tooltip: 'Tambah subjudul bagian (## Judul)',
+                    label: 'Heading',
+                    tooltip: 'Add section heading (## Heading)',
                     onTap: () {
                       HapticFeedback.lightImpact();
                       controller.toggleHeading();
@@ -102,8 +102,8 @@ class WrittleKeyboardAccessoryBar extends StatelessWidget {
                   _buildToolButton(
                     context: context,
                     icon: Icons.format_bold_rounded,
-                    label: 'Tebal',
-                    tooltip: 'Format teks tebal (**teks**)',
+                    label: 'Bold',
+                    tooltip: 'Format bold text (**text**)',
                     onTap: () {
                       HapticFeedback.lightImpact();
                       controller.toggleBold();
@@ -115,8 +115,8 @@ class WrittleKeyboardAccessoryBar extends StatelessWidget {
                   _buildToolButton(
                     context: context,
                     icon: Icons.format_italic_rounded,
-                    label: 'Miring',
-                    tooltip: 'Format teks miring (*teks*)',
+                    label: 'Italic',
+                    tooltip: 'Format italic text (*text*)',
                     onTap: () {
                       HapticFeedback.lightImpact();
                       controller.toggleItalic();

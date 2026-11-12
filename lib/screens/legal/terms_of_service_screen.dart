@@ -25,7 +25,7 @@ class TermsOfServiceScreen extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'Syarat & Ketentuan',
+          'Terms of Service',
           style: AppTypography.storyHeading.copyWith(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -51,7 +51,7 @@ class TermsOfServiceScreen extends StatelessWidget {
                       border: Border.all(color: AppColors.borderColor(context)),
                     ),
                     child: Text(
-                      'Versi $termsVersion • Pembaruan: $lastUpdated',
+                      'Version $termsVersion • Updated: $lastUpdated',
                       style: AppTypography.captionMeta.copyWith(
                         fontSize: 11,
                         color: AppColors.burntSienna,
@@ -69,59 +69,59 @@ class TermsOfServiceScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildTitle('1. Ketentuan Umum'),
+                      _buildTitle('1. General Terms'),
                       _buildParagraph(
-                        'Dengan mendaftar, mengakses, atau menggunakan aplikasi Writelle, Anda menyetujui untuk terikat oleh Syarat dan Ketentuan ini. Jika Anda tidak menyetujui salah satu pasal, mohon untuk tidak menggunakan layanan ini.',
+                        'By registering, accessing, or using the Writelle application, you agree to be bound by these Terms of Service. If you do not agree to any of these terms, please do not use this sanctuary or its services.',
                       ),
                       const SizedBox(height: 18),
 
-                      _buildTitle('2. Suaka Kata & Etos Komunitas'),
+                      _buildTitle('2. The Sanctuary & Community Ethos'),
                       _buildParagraph(
-                        'Writelle dibangun sebagai suaka sastra untuk refleksi mendalam, kisah kehidupan, dan kata-kata hening. Kami menjunjung tinggi rasa saling menghargai antarpenulis dan pembaca.',
+                        'Writelle is crafted as a quiet literary sanctuary for contemplative essays, personal reflections, and mindful storytelling. We hold mutual respect, psychological safety, and creative dignity as our core virtues across all readers and scribes.',
                       ),
                       const SizedBox(height: 18),
 
-                      _buildTitle('3. Kebijakan Konten Buatan Pengguna (UGC) — Toleransi Nol'),
+                      _buildTitle('3. User-Generated Content (UGC) — Zero Tolerance'),
                       _buildParagraph(
-                        'Sesuai dengan Kebijakan Pengembang Google Play mengenai Konten Buatan Pengguna (User-Generated Content), Writelle menerapkan kebijakan TOLERANSI NOL (Zero Tolerance) terhadap segala bentuk konten dan perilaku yang melanggar hukum serta membahayakan komunitas, meliputi:',
+                        'In accordance with Google Play Developer Policies on User-Generated Content, Writelle enforces a strict ZERO TOLERANCE policy against unlawful, harmful, or abusive content and behaviors, including:',
                       ),
-                      _buildBullet('Pelecehan & Perundungan:', 'Dilarang merendahkan, mengancam, atau mengintimidasi penulis lain.'),
-                      _buildBullet('Ujaran Kebencian (Hate Speech):', 'Dilarang menyebarkan kebencian berdasarkan SARA, ras, gender, atau disabilitas.'),
-                      _buildBullet('Konten Seksual & Eksplisit:', 'Dilarang mengunggah pornografi, eksploitasi seksual, atau ketelanjangan vulgar.'),
-                      _buildBullet('Kekerasan & Bahaya Diri:', 'Dilarang mempromosikan aksi terorisme, kekerasan ekstrem, atau anjuran bunuh diri.'),
-                      _buildBullet('Spam & Penipuan:', 'Dilarang menggunakan suaka untuk promosi komersial ilegal, bot, atau penipuan.'),
+                      _buildBullet('Harassment & Bullying:', 'Degrading, threatening, or intimidating other writers and readers is strictly prohibited.'),
+                      _buildBullet('Hate Speech:', 'Promoting hatred, discrimination, or violence based on race, ethnicity, religion, disability, or gender is forbidden.'),
+                      _buildBullet('Sexually Explicit Content:', 'Pornography, vulgar sexual imagery, or non-consensual sexual depictions are not permitted.'),
+                      _buildBullet('Violence & Self-Harm:', 'Incitement to violence, glorification of terrorism, or encouragement of self-harm or suicide is strictly prohibited.'),
+                      _buildBullet('Spam & Deception:', 'Using the platform for automated bot posts, commercial solicitation, scams, or malicious links is forbidden.'),
                       const SizedBox(height: 18),
 
-                      _buildTitle('4. Pelaporan dan Pemblokiran Pengguna'),
+                      _buildTitle('4. Reporting & Content Moderation'),
                       _buildParagraph(
-                        'Untuk menjaga kenyamanan dan ketenteraman bersama:',
+                        'To preserve a serene and secure reading sanctuary for everyone:',
                       ),
-                      _buildBullet('Lapor Kisah (Report):', 'Setiap pembaca dapat melaporkan tulisan yang melanggar aturan melalui menu "Report Whisper". Kurator kami meninjau laporan ini secara berkala.'),
-                      _buildBullet('Blokir Penulis (Block):', 'Pengguna dapat memblokir penulis yang tidak diinginkan sehingga konten mereka tidak lagi tampak di suaka Anda.'),
-                      _buildBullet('Tindakan Kurasi:', 'Pengelola suaka (Admin/Kurator) berhak menghapus konten pelanggar dan membekukan akun yang melanggar tanpa pemberitahuan sebelumnya.'),
+                      _buildBullet('Report Tale (Whisper):', 'Any reader can flag violating content through the "Report Whisper" menu. Our moderation team reviews every submission promptly.'),
+                      _buildBullet('Block Author:', 'You can instantaneously block any author. Their stories and comments will be completely hidden from your feed and interactions.'),
+                      _buildBullet('Curator Actions:', 'Sanctuary administrators and curators reserve the right to remove non-compliant content and suspend or terminate offending accounts immediately and without prior notice.'),
                       const SizedBox(height: 18),
 
-                      _buildTitle('5. Hak Kekayaan Intelektual'),
+                      _buildTitle('5. Intellectual Property Rights'),
                       _buildParagraph(
-                        'Hak cipta atas naskah dan cerita yang Anda tulis TETAP SEPENUHNYA MILIK ANDA. Dengan menerbitkan tulisan di Writelle, Anda memberikan lisensi non-eksklusif, bebas royalti kepada Writelle untuk menampilkan, mengarsipkan, dan memformat tulisan Anda di dalam platform untuk keperluan pembacaan.',
-                      ),
-                      const SizedBox(height: 18),
-
-                      _buildTitle('6. Akun dan Keamanan'),
-                      _buildParagraph(
-                        'Anda bertanggung jawab menjaga kerahasiaan kata sandi dan akses akun Anda. Anda dilarang membuat akun tiruan (impersonasi) atau menggunakan nama pena yang melanggar hak cipta pihak lain.',
+                        'You retain complete copyright and ownership of all stories, essays, and words you write. By publishing on Writelle, you grant us a non-exclusive, royalty-free, worldwide license solely to display, archive, and format your stories for reading within the platform.',
                       ),
                       const SizedBox(height: 18),
 
-                      _buildTitle('7. Penafian dan Batasan Tanggung Jawab'),
+                      _buildTitle('6. Account Integrity & Security'),
                       _buildParagraph(
-                        'Aplikasi Writelle disediakan "sebagaimana adanya" (as-is). Kami berupaya semaksimal mungkin menjaga keandalan sistem, namun tidak bertanggung jawab atas kerugian tidak langsung yang timbul akibat gangguan teknis di luar kendali wajar kami.',
+                        'You are responsible for safeguarding your credentials and access to your account. Impersonation of other writers, creators, or entities is strictly prohibited.',
                       ),
                       const SizedBox(height: 18),
 
-                      _buildTitle('8. Kontak Dukungan'),
+                      _buildTitle('7. Disclaimers & Limitation of Liability'),
                       _buildParagraph(
-                        'Untuk pertanyaan atau aduan terkait ketentuan layanan, silakan hubungi tim pengembang kami di mazzamfirdaus06@gmail.com.',
+                        'Writelle is provided on an "as is" and "as available" basis. While we strive to maintain uninterrupted service and literary tranquility, we are not liable for any indirect or incidental damages resulting from technical interruptions beyond our reasonable control.',
+                      ),
+                      const SizedBox(height: 18),
+
+                      _buildTitle('8. Contact & Legal Inquiries'),
+                      _buildParagraph(
+                        'For questions, disputes, or safety concerns regarding these Terms of Service, please reach out to our team at mazzamfirdaus06@gmail.com.',
                       ),
                     ],
                   ),
