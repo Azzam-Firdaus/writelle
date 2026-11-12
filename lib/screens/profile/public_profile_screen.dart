@@ -285,11 +285,11 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                 ),
-                child: Row(
+                child: const Row(
                   children: [
-                    const Icon(Icons.block, color: AppColors.error, size: 20),
-                    const SizedBox(width: 10),
-                    const Expanded(
+                    Icon(Icons.block, color: AppColors.error, size: 20),
+                    SizedBox(width: 10),
+                    Expanded(
                       child: Text(
                         'You have blocked this author. Their scrolls are concealed from your sanctuary feed.',
                         style: TextStyle(fontSize: 12.5, color: AppColors.error, height: 1.35),

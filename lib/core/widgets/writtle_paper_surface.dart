@@ -59,17 +59,14 @@ class WrittlePaperSurface extends StatelessWidget {
               color: AppColors.espresso.withValues(alpha: 0.04),
               offset: const Offset(0, 4),
               blurRadius: 16,
-              spreadRadius: 0,
             ),
             BoxShadow(
               color: AppColors.warmSand.withValues(alpha: 0.25),
               offset: const Offset(0, 1),
               blurRadius: 4,
-              spreadRadius: 0,
             ),
           ];
         }
-        break;
 
       case PaperSurfaceVariant.parchment:
         backgroundColor = isDark ? const Color(0xFF221A15) : AppColors.softParchment;
@@ -83,12 +80,10 @@ class WrittlePaperSurface extends StatelessWidget {
             ),
           ];
         }
-        break;
 
       case PaperSurfaceVariant.sand:
         backgroundColor = isDark ? const Color(0xFF2E221B) : AppColors.warmSand.withValues(alpha: 0.65);
         borderColor = isDark ? AppColors.borderDark : const Color(0xFFDAC7B0);
-        break;
 
       case PaperSurfaceVariant.espresso:
         backgroundColor = AppColors.espresso;
@@ -103,12 +98,10 @@ class WrittlePaperSurface extends StatelessWidget {
             ),
           ];
         }
-        break;
 
       case PaperSurfaceVariant.bordered:
         backgroundColor = Colors.transparent;
         borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
-        break;
     }
 
     final decoration = BoxDecoration(

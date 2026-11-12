@@ -76,7 +76,6 @@ class EditorialButton extends StatelessWidget {
           ),
           child: childContent,
         );
-        break;
 
       case EditorialButtonVariant.secondary:
         button = ElevatedButton(
@@ -92,7 +91,6 @@ class EditorialButton extends StatelessWidget {
           ),
           child: childContent,
         );
-        break;
 
       case EditorialButtonVariant.outlined:
         button = OutlinedButton(
@@ -107,7 +105,6 @@ class EditorialButton extends StatelessWidget {
           ),
           child: childContent,
         );
-        break;
 
       case EditorialButtonVariant.text:
         button = TextButton(
@@ -118,7 +115,6 @@ class EditorialButton extends StatelessWidget {
           ),
           child: childContent,
         );
-        break;
     }
 
     if (width != null) {

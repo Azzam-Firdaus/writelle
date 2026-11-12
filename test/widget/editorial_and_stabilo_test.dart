@@ -205,7 +205,6 @@ void main() {
       publishedAt: DateTime.now(),
       createdAt: DateTime.now(),
       likesCount: 28,
-      commentsCount: 7,
       isLiked: false,
       isBookmarked: false,
       coverUrl: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c',
@@ -223,7 +222,6 @@ void main() {
       publishedAt: DateTime.now(),
       createdAt: DateTime.now(),
       likesCount: 19,
-      commentsCount: 4,
       isLiked: false,
       isBookmarked: false,
       coverUrl: null,
@@ -292,7 +290,6 @@ void main() {
         publishedAt: DateTime.now(),
         createdAt: DateTime.now(),
         likesCount: 15,
-        commentsCount: 3,
         isLiked: false,
         isBookmarked: false,
       );
@@ -353,7 +350,6 @@ void main() {
       publishedAt: DateTime.now(),
       createdAt: DateTime.now(),
       likesCount: 42,
-      commentsCount: 9,
       isLiked: false,
       isBookmarked: false,
     );
@@ -419,7 +415,6 @@ void main() {
         publishedAt: DateTime.now(),
         createdAt: DateTime.now(),
         likesCount: 10,
-        commentsCount: 2,
         coverUrl: null,
       );
 

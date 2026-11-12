@@ -108,7 +108,7 @@ class _WrittleLikePillState extends State<WrittleLikePill>
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = AppColors.burntSienna;
+    const activeColor = AppColors.burntSienna;
     final inactiveColor = AppColors.textSecondaryColor(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -287,7 +287,7 @@ class _WrittleBookmarkPillState extends State<WrittleBookmarkPill>
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = AppColors.burntSienna;
+    const activeColor = AppColors.burntSienna;
     final inactiveColor = AppColors.textSecondaryColor(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 

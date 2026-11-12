@@ -61,7 +61,6 @@ void main() {
       publishedAt: DateTime.now(),
       createdAt: DateTime.now(),
       likesCount: 14,
-      commentsCount: 3,
       isLiked: false,
       isBookmarked: false,
     );

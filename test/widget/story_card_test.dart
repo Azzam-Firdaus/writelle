@@ -17,7 +17,6 @@ void main() {
     categorySlug: 'reflections',
     createdAt: DateTime.now(),
     likesCount: 12,
-    commentsCount: 5,
   );
 
   testWidgets('StoryCard renders cleanly without overflow on 360px screens with trailing and actions', (tester) async {

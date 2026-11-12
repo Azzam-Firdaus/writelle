@@ -138,7 +138,7 @@ class StoryCard extends StatelessWidget {
                           CircleAvatar(
                             radius: 11,
                             backgroundColor: AppColors.warmSand.withValues(alpha: isDark ? 0.3 : 0.6),
-                            child: Icon(
+                            child: const Icon(
                               Icons.shield_outlined,
                               size: 13,
                               color: AppColors.burntSienna,

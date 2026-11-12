@@ -100,10 +100,6 @@ class AuthRepository {
       password: password,
     );
 
-    debugPrint('Sign in successful: ${response.user != null}');
-    debugPrint('Session available: ${response.session != null}');
-    debugPrint('Active user: ${client.auth.currentUser?.id != null}');
-
     return response;
   }
 

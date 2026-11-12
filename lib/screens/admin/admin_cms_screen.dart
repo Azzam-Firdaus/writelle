@@ -1240,20 +1240,16 @@ class _AdminCmsScreenState extends ConsumerState<AdminCmsScreen>
       case 'spam':
         reasonColor = AppColors.accentSubtle;
         reasonLabel = 'Spam & Solicitation';
-        break;
       case 'harassment':
         reasonColor = AppColors.error;
         reasonLabel = 'Harassment';
-        break;
       case 'hate_speech':
         reasonColor = Colors.purple.shade700;
         reasonLabel = 'Hate Speech';
-        break;
       case 'explicit_content':
       case 'explicit':
         reasonColor = Colors.red.shade900;
         reasonLabel = 'Explicit Content';
-        break;
       default:
         reasonColor = AppColors.textSecondary;
         reasonLabel = 'Rule Violation';
@@ -2185,57 +2181,46 @@ class _AdminCmsScreenState extends ConsumerState<AdminCmsScreen>
         actionIcon = Icons.visibility_off_outlined;
         actionColor = AppColors.error;
         actionTitle = 'Sheltered Story';
-        break;
       case 'restore_story':
         actionIcon = Icons.visibility_outlined;
         actionColor = AppColors.success;
         actionTitle = 'Restored Story';
-        break;
       case 'delete_story':
         actionIcon = Icons.delete_outline;
         actionColor = AppColors.error;
         actionTitle = 'Moved to Trash';
-        break;
       case 'permanent_delete_story':
         actionIcon = Icons.delete_forever_outlined;
         actionColor = AppColors.error;
         actionTitle = 'Permanently Purged';
-        break;
       case 'review_report':
         actionIcon = Icons.check_circle_outline;
         actionColor = AppColors.success;
         actionTitle = 'Reviewed Report';
-        break;
       case 'dismiss_report':
         actionIcon = Icons.cancel_outlined;
         actionColor = AppColors.textSecondary;
         actionTitle = 'Dismissed Report';
-        break;
       case 'create_category':
         actionIcon = Icons.add_circle_outline;
         actionColor = AppColors.accentPrimary;
         actionTitle = 'Forged Realm';
-        break;
       case 'update_category':
         actionIcon = Icons.edit_outlined;
         actionColor = AppColors.accentSubtle;
         actionTitle = 'Refined Realm';
-        break;
       case 'delete_category':
         actionIcon = Icons.folder_delete_outlined;
         actionColor = AppColors.error;
         actionTitle = 'Dissolved Realm';
-        break;
       case 'assign_curator':
         actionIcon = Icons.verified_user_outlined;
         actionColor = AppColors.success;
         actionTitle = 'Appointed Curator';
-        break;
       case 'demote_curator':
         actionIcon = Icons.person_remove_outlined;
         actionColor = AppColors.error;
         actionTitle = 'Revoked Curator';
-        break;
       default:
         actionIcon = Icons.info_outline;
         actionColor = AppColors.accentPrimary;

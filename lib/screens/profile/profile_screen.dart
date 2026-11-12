@@ -297,11 +297,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                       builder: (c) => AlertDialog(
                         backgroundColor: AppColors.surface(context),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        title: Row(
+                        title: const Row(
                           children: [
-                            const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 24),
-                            const SizedBox(width: 8),
-                            const Expanded(child: Text('Delete Account Permanently?')),
+                            Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 24),
+                            SizedBox(width: 8),
+                            Expanded(child: Text('Delete Account Permanently?')),
                           ],
                         ),
                         content: const SingleChildScrollView(

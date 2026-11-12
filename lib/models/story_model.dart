@@ -22,7 +22,6 @@ class StoryModel {
   final bool deletedByCurator;
   final int viewsCount;
   final int likesCount;
-  final int commentsCount;
   final bool isLiked;
   final bool isBookmarked;
   final String readingTime;
@@ -46,7 +45,6 @@ class StoryModel {
     this.deletedByCurator = false,
     this.viewsCount = 0,
     this.likesCount = 0,
-    this.commentsCount = 0,
     this.isLiked = false,
     this.isBookmarked = false,
     String? readingTime,
@@ -99,7 +97,6 @@ class StoryModel {
       deletedByCurator: map['deleted_by_curator'] as bool? ?? false,
       viewsCount: (map['views_count'] as num?)?.toInt() ?? 0,
       likesCount: (map['likes_count'] as num?)?.toInt() ?? 0,
-      commentsCount: (map['comments_count'] as num?)?.toInt() ?? 0,
       isLiked: isLiked,
       isBookmarked: isBookmarked,
       readingTime: ReadingTimeCalculator.calculate(rawContent),
@@ -126,7 +123,6 @@ class StoryModel {
     bool? deletedByCurator,
     int? viewsCount,
     int? likesCount,
-    int? commentsCount,
     bool? isLiked,
     bool? isBookmarked,
     String? readingTime,
@@ -151,7 +147,6 @@ class StoryModel {
       deletedByCurator: deletedByCurator ?? this.deletedByCurator,
       viewsCount: viewsCount ?? this.viewsCount,
       likesCount: likesCount ?? this.likesCount,
-      commentsCount: commentsCount ?? this.commentsCount,
       isLiked: isLiked ?? this.isLiked,
       isBookmarked: isBookmarked ?? this.isBookmarked,
       readingTime: readingTime ?? (content != null ? ReadingTimeCalculator.calculate(updatedContent) : this.readingTime),

@@ -696,7 +696,6 @@ class AdminRepository {
             deletedAt: map['deleted_at'] != null ? DateTime.tryParse(map['deleted_at'] as String) : null,
             viewsCount: (map['views_count'] as num?)?.toInt() ?? 0,
             likesCount: (map['likes_count'] as num?)?.toInt() ?? 0,
-            commentsCount: (map['comments_count'] as num?)?.toInt() ?? 0,
           ),
         );
       }

@@ -286,15 +286,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         switch (_selectedSort) {
           case StorySortOption.latest:
             filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-            break;
           case StorySortOption.popular:
             filtered.sort((a, b) =>
                 (b.viewsCount + b.likesCount * 3)
                     .compareTo(a.viewsCount + a.likesCount * 3));
-            break;
           case StorySortOption.mostLiked:
             filtered.sort((a, b) => b.likesCount.compareTo(a.likesCount));
-            break;
         }
 
         if (filtered.isEmpty) {

@@ -485,17 +485,17 @@ class _StoryReaderScreenState extends ConsumerState<StoryReaderScreen> {
               ),
               const SizedBox(height: 10),
 
-              // 3. Reading Meta Info (e.g. 6 min read Â· Jul 9)
+              // 3. Reading Meta Info (e.g. 6 min read • Jul 9)
               Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.auto_stories_outlined,
                     size: 14,
                     color: AppColors.burntSienna,
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    '${_story.readingTime} Â· $formattedDate',
+                    '${_story.readingTime} • $formattedDate',
                     style: AppTypography.captionMeta.copyWith(
                       fontSize: 12.5,
                       color: AppColors.textSecondaryColor(context),
@@ -518,7 +518,7 @@ class _StoryReaderScreenState extends ConsumerState<StoryReaderScreen> {
                         CircleAvatar(
                           radius: 20,
                           backgroundColor: AppColors.surfaceWarmColor(context),
-                          child: Icon(Icons.shield_outlined, size: 20, color: AppColors.burntSienna),
+                          child: const Icon(Icons.shield_outlined, size: 20, color: AppColors.burntSienna),
                         )
                       else
                         WrittleAvatar(
