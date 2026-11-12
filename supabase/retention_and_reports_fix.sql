@@ -19,10 +19,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 
--- 1. ENSURE deleted_at COLUMN EXISTS ON STORIES
--- (Crucial for 14-day soft-delete retention so stories are not hard-deleted)
+-- 1. ENSURE deleted_at AND deleted_by_curator COLUMNS EXIST ON STORIES
+-- (Crucial for 14-day soft-delete retention and differentiating author deletes vs curator moderation)
 ALTER TABLE public.stories 
 ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+
+ALTER TABLE public.stories 
+ADD COLUMN IF NOT EXISTS deleted_by_curator BOOLEAN NOT NULL DEFAULT FALSE;
 
 -- 2. CREATE FOLLOWS TABLE & REALTIME PUBLICATION
 -- (Required for Readers & Following counts to sync and update in real-time)
@@ -107,7 +110,9 @@ BEGIN
   END IF;
 
   UPDATE public.stories
-  SET deleted_at = NOW(), updated_at = NOW()
+  SET deleted_at = NOW(), 
+      deleted_by_curator = TRUE,
+      updated_at = NOW()
   WHERE id = target_story_id;
 
   RETURN jsonb_build_object('success', true);
@@ -127,8 +132,44 @@ BEGIN
   END IF;
 
   UPDATE public.stories
-  SET deleted_at = NULL, updated_at = NOW()
+  SET deleted_at = NULL, 
+      deleted_by_curator = FALSE,
+      updated_at = NOW()
   WHERE id = target_story_id;
+
+  RETURN jsonb_build_object('success', true);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 5b. DEDICATED RPC: USER SELF-RESTORE STORY (Only for stories deleted by author, NOT curator)
+CREATE OR REPLACE FUNCTION public.restore_soft_deleted_story(target_story_id UUID)
+RETURNS JSONB AS $$
+DECLARE
+  story_record RECORD;
+BEGIN
+  SELECT * INTO story_record FROM public.stories WHERE id = target_story_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Tale not found.';
+  END IF;
+
+  -- Ensure caller is the author
+  IF story_record.user_id != auth.uid() THEN
+    RAISE EXCEPTION 'You are not the author of this tale.';
+  END IF;
+
+  -- CRITICAL SECURITY RULE: If deleted by curator/admin, author cannot self-restore!
+  IF story_record.deleted_by_curator = TRUE THEN
+    RAISE EXCEPTION 'This tale was quarantined by a sanctuary curator/admin and cannot be self-restored.';
+  END IF;
+
+  -- Ensure within 14-day grace period
+  IF story_record.deleted_at < (NOW() - INTERVAL '14 days') THEN
+    RAISE EXCEPTION 'The 14-day restoration window has expired.';
+  END IF;
+
+  UPDATE public.stories
+  SET deleted_at = NULL, updated_at = NOW()
+  WHERE id = target_story_id AND user_id = auth.uid();
 
   RETURN jsonb_build_object('success', true);
 END;

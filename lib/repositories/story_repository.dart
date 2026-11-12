@@ -452,14 +452,22 @@ class StoryRepository {
         } catch (_) {
           var query = client
               .from('stories')
-              .update({'deleted_at': DateTime.now().toUtc().toIso8601String()})
+              .update({
+                'deleted_at': DateTime.now().toUtc().toIso8601String(),
+                'deleted_by_curator': true,
+                'updated_at': DateTime.now().toUtc().toIso8601String(),
+              })
               .eq('id', storyId);
           await query;
         }
       } else {
         var query = client
             .from('stories')
-            .update({'deleted_at': DateTime.now().toUtc().toIso8601String()})
+            .update({
+              'deleted_at': DateTime.now().toUtc().toIso8601String(),
+              'deleted_by_curator': false,
+              'updated_at': DateTime.now().toUtc().toIso8601String(),
+            })
             .eq('id', storyId)
             .eq('user_id', user.id);
         await query;
@@ -486,15 +494,50 @@ class StoryRepository {
     }
   }
 
-  /// Restores a soft-deleted story from 14-day retention back to the sanctuary
+  /// Restores a soft-deleted story from 14-day retention back to the sanctuary.
+  /// Throws an exception if the story was deleted by a curator/admin for moderation.
   Future<void> restoreStory(String storyId) async {
     final client = _supabase;
     if (client == null) throw Exception('Database connection not initialized.');
 
+    final user = client.auth.currentUser;
+    if (user == null) throw Exception('User must be logged in to restore stories.');
+
+    // 1. Try dedicated RPC restore_soft_deleted_story (enforces deleted_by_curator = false in DB)
+    try {
+      await client.rpc('restore_soft_deleted_story', params: {
+        'target_story_id': storyId,
+      });
+      return;
+    } catch (e) {
+      debugPrint('[StoryRepository.restoreStory] RPC notice: $e');
+    }
+
+    // 2. Direct fallback check: ensure the story was NOT deleted by a curator!
+    final check = await client
+        .from('stories')
+        .select('deleted_by_curator, user_id, deleted_at')
+        .eq('id', storyId)
+        .maybeSingle();
+
+    if (check != null) {
+      if (check['deleted_by_curator'] == true) {
+        throw Exception('This tale was quarantined by a sanctuary curator and cannot be self-restored.');
+      }
+      if (check['user_id'] != user.id) {
+        throw Exception('You can only restore your own tales.');
+      }
+    }
+
     await client
         .from('stories')
-        .update({'deleted_at': null, 'updated_at': DateTime.now().toIso8601String()})
-        .eq('id', storyId);
+        .update({
+          'deleted_at': null,
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        })
+        .eq('id', storyId)
+        .eq('user_id', user.id)
+        .eq('deleted_by_curator', false);
   }
 
   /// Updates an existing story (draft or published)

@@ -38,7 +38,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _setupRealtimeSubscriptions();
   }
 
@@ -63,6 +63,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
               if (mounted) {
                 ref.invalidate(myPublishedStoriesProvider);
                 ref.invalidate(myDraftStoriesProvider);
+                ref.invalidate(myTrashStoriesProvider);
               }
             },
           )
@@ -629,6 +630,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                     tabs: const [
                       Tab(text: 'Writings'),
                       Tab(text: 'Drafts'),
+                      Tab(text: 'Trash (14d)'),
                     ],
                   ),
                   backgroundColor: AppColors.background(context),
@@ -641,6 +643,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
             children: [
               _buildPublishedList(),
               _buildDraftsList(),
+              _buildTrashList(),
             ],
           ),
         ),
@@ -863,6 +866,142 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
     );
   }
 
+  Widget _buildTrashList() {
+    final trashAsync = ref.watch(myTrashStoriesProvider);
+
+    return RefreshIndicator(
+      color: AppColors.burntSienna,
+      onRefresh: () async {
+        ref.invalidate(myTrashStoriesProvider);
+      },
+      child: trashAsync.when(
+        skipLoadingOnReload: true,
+        skipLoadingOnRefresh: true,
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.burntSienna),
+        ),
+        error: (err, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Text(
+              'Could not load trash: $err',
+              textAlign: TextAlign.center,
+              style: AppTypography.uiBody.copyWith(color: AppColors.error),
+            ),
+          ),
+        ),
+        data: (stories) {
+          if (stories.isEmpty) {
+            return const EmptyStateWidget(
+              icon: Icons.delete_outline,
+              title: 'Trash is clear',
+              message: 'Tales deleted by you are preserved for 14 days before permanent erasure.',
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.only(top: 8, bottom: 32),
+            itemCount: stories.length,
+            itemBuilder: (context, index) {
+              final story = stories[index];
+              final daysLeft = story.daysUntilPermanentDeletion;
+
+              return StoryCard(
+                key: ValueKey('trash_${story.id}'),
+                story: story,
+                showActions: false,
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${daysLeft}d left',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.error,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    IconButton(
+                      icon: const Icon(Icons.restore_outlined, size: 20, color: AppColors.success),
+                      tooltip: 'Restore Tale',
+                      onPressed: () => _confirmRestoreStory(story),
+                    ),
+                  ],
+                ),
+                onTap: () => _confirmRestoreStory(story),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _confirmRestoreStory(StoryModel story) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface(context),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Restore Tale?', style: AppTypography.storyHeading.copyWith(fontSize: 18, color: AppColors.burntSienna)),
+        content: Text(
+          'Restore "${story.title}" back to your parchment? It will become visible again.',
+          style: AppTypography.uiBody,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.burntSienna,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Restore Tale'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        final repo = ref.read(storyRepositoryProvider);
+        await repo.restoreStory(story.id);
+
+        ref.invalidate(myTrashStoriesProvider);
+        ref.invalidate(myPublishedStoriesProvider);
+        ref.invalidate(myDraftStoriesProvider);
+        ref.invalidate(feedStoriesProvider);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Tale "${story.title}" restored successfully.'),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Could not restore tale: $e'),
+            ),
+          );
+        }
+      }
+    }
+  }
+
   Future<void> _openEditor(StoryModel story) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -882,7 +1021,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(isDraft ? 'Discard Draft?' : 'Erase Tale?'),
         content: Text(
-          'Are you sure you wish to release "${story.title}" into silence? This action cannot be recalled.',
+          isDraft
+              ? 'Discard this draft? It will be safely retained in your trash for 14 days before permanent erasure.'
+              : 'Move "${story.title}" to trash? It will be safely kept for 14 days and can be restored before permanent erasure.',
         ),
         actions: [
           TextButton(
@@ -908,6 +1049,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
 
         ref.invalidate(myPublishedStoriesProvider);
         ref.invalidate(myDraftStoriesProvider);
+        ref.invalidate(myTrashStoriesProvider);
         ref.invalidate(feedStoriesProvider);
         ref.invalidate(bookmarkedStoriesProvider);
 

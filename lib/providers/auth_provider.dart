@@ -52,6 +52,15 @@ final myDraftStoriesProvider = FutureProvider<List<StoryModel>>((ref) async {
   return authRepo.getMyStories(draftsOnly: true);
 });
 
+/// Fetches user's own soft-deleted stories in the 14-day retention window.
+/// Stories deleted by a curator/admin are strictly excluded.
+final myTrashStoriesProvider = FutureProvider<List<StoryModel>>((ref) async {
+  ref.watch(authStateProvider.select((s) => s.value?.session?.user.id));
+  final authRepo = ref.read(authRepositoryProvider);
+  if (!authRepo.isAuthenticated) return [];
+  return authRepo.getMyTrashStories();
+});
+
 final searchAuthorsProvider =
     FutureProvider.family<List<UserProfileModel>, String>((ref, query) async {
   final authRepo = ref.watch(authRepositoryProvider);

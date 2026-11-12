@@ -514,6 +514,60 @@ class AuthRepository {
     }).toList();
   }
 
+  /// Fetches author's own soft-deleted stories within the 14-day retention window.
+  /// CRITICAL SECURITY RULE: Stories deleted by an administrator/curator (deleted_by_curator = true)
+  /// are strictly EXCLUDED from the user's trash view.
+  Future<List<StoryModel>> getMyTrashStories() async {
+    final client = _supabase;
+    if (client == null) return [];
+
+    final user = client.auth.currentUser;
+    if (user == null) return [];
+
+    final response = await client
+        .from('stories')
+        .select('*, categories:category_id(name, slug)')
+        .eq('user_id', user.id)
+        .not('deleted_at', 'is', null)
+        .eq('deleted_by_curator', false)
+        .order('deleted_at', ascending: false);
+
+    final storyList = response as List;
+    return storyList.map((item) {
+      final map = item as Map<String, dynamic>;
+      String catName = 'General';
+      String catSlug = 'general';
+      if (map['categories'] != null && map['categories'] is Map) {
+        catName = map['categories']['name'] as String? ?? 'General';
+        catSlug = map['categories']['slug'] as String? ?? 'general';
+      }
+
+      final storyId = map['id'] as String;
+      final dbCover = map['cover_url'] as String?;
+      final resolvedCover = (dbCover != null && dbCover.trim().isNotEmpty)
+          ? dbCover.trim()
+          : CoverCache.get(storyId);
+
+      return StoryModel(
+        id: storyId,
+        userId: map['user_id'] as String? ?? user.id,
+        categoryId: map['category_id'] as String? ?? '',
+        categoryName: catName,
+        categorySlug: catSlug,
+        title: map['title'] as String? ?? '',
+        content: map['content'] as String? ?? '',
+        isAnonymous: map['is_anonymous'] as bool? ?? true,
+        authorName: (map['is_anonymous'] as bool? ?? true) ? 'Anonymous' : 'You',
+        publishedAt: map['published_at'] != null ? DateTime.tryParse(map['published_at'] as String) : null,
+        createdAt: map['created_at'] != null ? DateTime.tryParse(map['created_at'] as String) ?? DateTime.now() : DateTime.now(),
+        deletedAt: map['deleted_at'] != null ? DateTime.tryParse(map['deleted_at'] as String) : null,
+        deletedByCurator: map['deleted_by_curator'] as bool? ?? false,
+        viewsCount: (map['views_count'] as num?)?.toInt() ?? 0,
+        coverUrl: resolvedCover,
+      );
+    }).toList();
+  }
+
   /// Permanently deletes the authenticated user's account and associated data.
   /// Complies with Google Play User Data Policy (Account Deletion Requirement).
   Future<void> deleteAccount() async {

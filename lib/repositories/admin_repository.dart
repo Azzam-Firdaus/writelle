@@ -484,6 +484,7 @@ class AdminRepository {
               .from('stories')
               .update({
                 'deleted_at': DateTime.now().toIso8601String(),
+                'deleted_by_curator': true,
                 'updated_at': DateTime.now().toIso8601String(),
               })
               .eq('id', storyId);
@@ -518,6 +519,7 @@ class AdminRepository {
               .from('stories')
               .update({
                 'deleted_at': null,
+                'deleted_by_curator': false,
                 'updated_at': DateTime.now().toIso8601String(),
               })
               .eq('id', storyId);

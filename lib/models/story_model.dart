@@ -19,6 +19,7 @@ class StoryModel {
   final DateTime? publishedAt;
   final DateTime createdAt;
   final DateTime? deletedAt;
+  final bool deletedByCurator;
   final int viewsCount;
   final int likesCount;
   final int commentsCount;
@@ -42,6 +43,7 @@ class StoryModel {
     this.publishedAt,
     required this.createdAt,
     this.deletedAt,
+    this.deletedByCurator = false,
     this.viewsCount = 0,
     this.likesCount = 0,
     this.commentsCount = 0,
@@ -94,6 +96,7 @@ class StoryModel {
           ? DateTime.parse(map['created_at'] as String)
           : DateTime.now(),
       deletedAt: map['deleted_at'] != null ? DateTime.tryParse(map['deleted_at'] as String) : null,
+      deletedByCurator: map['deleted_by_curator'] as bool? ?? false,
       viewsCount: (map['views_count'] as num?)?.toInt() ?? 0,
       likesCount: (map['likes_count'] as num?)?.toInt() ?? 0,
       commentsCount: (map['comments_count'] as num?)?.toInt() ?? 0,
@@ -120,6 +123,7 @@ class StoryModel {
     DateTime? createdAt,
     DateTime? deletedAt,
     bool clearDeletedAt = false,
+    bool? deletedByCurator,
     int? viewsCount,
     int? likesCount,
     int? commentsCount,
@@ -144,6 +148,7 @@ class StoryModel {
       publishedAt: publishedAt ?? this.publishedAt,
       createdAt: createdAt ?? this.createdAt,
       deletedAt: clearDeletedAt ? null : (deletedAt ?? this.deletedAt),
+      deletedByCurator: deletedByCurator ?? this.deletedByCurator,
       viewsCount: viewsCount ?? this.viewsCount,
       likesCount: likesCount ?? this.likesCount,
       commentsCount: commentsCount ?? this.commentsCount,
