@@ -862,114 +862,120 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
       onRefresh: () async {
         ref.invalidate(myTrashStoriesProvider);
       },
-      child: Column(
-        children: [
-          _buildTrashInfoBanner(),
-          Expanded(
-            child: trashAsync.when(
-              skipLoadingOnReload: true,
-              skipLoadingOnRefresh: true,
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: AppColors.burntSienna),
-              ),
-              error: (err, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.error_outline, color: AppColors.error, size: 36),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Could not load trash',
-                        style: AppTypography.storyHeading.copyWith(fontSize: 16, color: AppColors.espresso),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        '$err',
-                        textAlign: TextAlign.center,
-                        style: AppTypography.captionMeta.copyWith(color: AppColors.mutedCocoa, fontSize: 12),
-                        maxLines: 4,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: () => ref.invalidate(myTrashStoriesProvider),
-                        icon: const Icon(Icons.refresh, size: 16),
-                        label: const Text('Try Again'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.burntSienna,
-                          foregroundColor: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
+      child: trashAsync.when(
+        skipLoadingOnReload: true,
+        skipLoadingOnRefresh: true,
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.burntSienna),
+        ),
+        error: (err, _) => ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(24.0),
+          children: [
+            _buildTrashInfoBanner(),
+            const SizedBox(height: 24),
+            const Icon(Icons.error_outline, color: AppColors.error, size: 36),
+            const SizedBox(height: 12),
+            Text(
+              'Could not load trash',
+              textAlign: TextAlign.center,
+              style: AppTypography.storyHeading.copyWith(fontSize: 16, color: AppColors.espresso),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '$err',
+              textAlign: TextAlign.center,
+              style: AppTypography.captionMeta.copyWith(color: AppColors.mutedCocoa, fontSize: 12),
+              maxLines: 4,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: ElevatedButton.icon(
+                onPressed: () => ref.invalidate(myTrashStoriesProvider),
+                icon: const Icon(Icons.refresh, size: 16),
+                label: const Text('Try Again'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.burntSienna,
+                  foregroundColor: Colors.white,
                 ),
               ),
-              data: (stories) {
-                if (stories.isEmpty) {
-                  return const EmptyStateWidget(
-                    icon: Icons.auto_delete_outlined,
-                    title: 'Your Trash is Empty',
-                    message: 'Tales deleted by you are preserved here for 14 days before permanent erasure. During this grace window, only you can see and restore them.',
-                  );
-                }
+            ),
+          ],
+        ),
+        data: (stories) {
+          if (stories.isEmpty) {
+            return ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                _buildTrashInfoBanner(),
+                const SizedBox(height: 16),
+                const EmptyStateWidget(
+                  icon: Icons.auto_delete_outlined,
+                  title: 'Your Trash is Empty',
+                  message: 'Tales deleted by you are preserved here for 14 days before permanent erasure. During this grace window, only you can see and restore them.',
+                ),
+              ],
+            );
+          }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.only(top: 4, bottom: 32),
-                  itemCount: stories.length,
-                  itemBuilder: (context, index) {
-                    final story = stories[index];
-                    final daysLeft = story.daysUntilPermanentDeletion;
+          return ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.only(top: 4, bottom: 32),
+            itemCount: stories.length + 1,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return _buildTrashInfoBanner();
+              }
 
-                    return StoryCard(
-                      key: ValueKey('trash_${story.id}'),
-                      story: story,
-                      showActions: false,
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Tooltip(
-                            message: '$daysLeft days left before permanent erasure',
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: AppColors.error.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.timer_outlined, size: 12, color: AppColors.error),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${daysLeft}d left',
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.error,
-                                    ),
-                                  ),
-                                ],
+              final story = stories[index - 1];
+              final daysLeft = story.daysUntilPermanentDeletion;
+
+              return StoryCard(
+                key: ValueKey('trash_${story.id}'),
+                story: story,
+                showActions: false,
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Tooltip(
+                      message: '$daysLeft days left before permanent erasure',
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.timer_outlined, size: 12, color: AppColors.error),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${daysLeft}d left',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.error,
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 4),
-                          IconButton(
-                            icon: const Icon(Icons.restore_outlined, size: 20, color: AppColors.success),
-                            tooltip: 'Restore Tale',
-                            onPressed: () => _confirmRestoreStory(story),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                      onTap: () => _confirmRestoreStory(story),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ],
+                    ),
+                    const SizedBox(width: 4),
+                    IconButton(
+                      icon: const Icon(Icons.restore_outlined, size: 20, color: AppColors.success),
+                      tooltip: 'Restore Tale',
+                      onPressed: () => _confirmRestoreStory(story),
+                    ),
+                  ],
+                ),
+                onTap: () => _confirmRestoreStory(story),
+              );
+            },
+          );
+        },
       ),
     );
   }
