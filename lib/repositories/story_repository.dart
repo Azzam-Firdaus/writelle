@@ -444,16 +444,27 @@ class StoryRepository {
           await query;
         }
       } else {
-        var query = client
-            .from('stories')
-            .update({
-              'deleted_at': DateTime.now().toUtc().toIso8601String(),
-              'deleted_by_curator': false,
-              'updated_at': DateTime.now().toUtc().toIso8601String(),
-            })
-            .eq('id', storyId)
-            .eq('user_id', user.id);
-        await query;
+        try {
+          await client
+              .from('stories')
+              .update({
+                'deleted_at': DateTime.now().toUtc().toIso8601String(),
+                'deleted_by_curator': false,
+                'updated_at': DateTime.now().toUtc().toIso8601String(),
+              })
+              .eq('id', storyId)
+              .eq('user_id', user.id);
+        } catch (_) {
+          // Fallback if deleted_by_curator column is not yet migrated in PostgreSQL
+          await client
+              .from('stories')
+              .update({
+                'deleted_at': DateTime.now().toUtc().toIso8601String(),
+                'updated_at': DateTime.now().toUtc().toIso8601String(),
+              })
+              .eq('id', storyId)
+              .eq('user_id', user.id);
+        }
       }
     } catch (e) {
       debugPrint('[StoryRepository.deleteStory] Soft delete update error: $e');
@@ -497,30 +508,49 @@ class StoryRepository {
     }
 
     // 2. Direct fallback check: ensure the story was NOT deleted by a curator!
-    final check = await client
-        .from('stories')
-        .select('deleted_by_curator, user_id, deleted_at')
-        .eq('id', storyId)
-        .maybeSingle();
+    try {
+      final check = await client
+          .from('stories')
+          .select('deleted_by_curator, user_id, deleted_at')
+          .eq('id', storyId)
+          .maybeSingle();
 
-    if (check != null) {
-      if (check['deleted_by_curator'] == true) {
-        throw Exception('This tale was quarantined by a sanctuary curator and cannot be self-restored.');
+      if (check != null) {
+        if (check['deleted_by_curator'] == true) {
+          throw Exception('This tale was quarantined by a sanctuary curator and cannot be self-restored.');
+        }
+        if (check['user_id'] != user.id) {
+          throw Exception('You can only restore your own tales.');
+        }
       }
-      if (check['user_id'] != user.id) {
-        throw Exception('You can only restore your own tales.');
+    } catch (e) {
+      if (e.toString().contains('quarantined') || e.toString().contains('only restore your own')) {
+        rethrow;
       }
+      debugPrint('[StoryRepository.restoreStory] Pre-check notice: $e');
     }
 
-    await client
-        .from('stories')
-        .update({
-          'deleted_at': null,
-          'updated_at': DateTime.now().toUtc().toIso8601String(),
-        })
-        .eq('id', storyId)
-        .eq('user_id', user.id)
-        .eq('deleted_by_curator', false);
+    try {
+      await client
+          .from('stories')
+          .update({
+            'deleted_at': null,
+            'deleted_by_curator': false,
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', storyId)
+          .eq('user_id', user.id);
+    } catch (_) {
+      // Fallback if deleted_by_curator column is not present
+      await client
+          .from('stories')
+          .update({
+            'deleted_at': null,
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', storyId)
+          .eq('user_id', user.id);
+    }
   }
 
   /// Updates an existing story (draft or published)

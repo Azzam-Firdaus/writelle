@@ -504,15 +504,57 @@ class AuthRepository {
     final user = client.auth.currentUser;
     if (user == null) return [];
 
-    final response = await client
-        .from('stories')
-        .select('*, categories:category_id(name, slug)')
-        .eq('user_id', user.id)
-        .not('deleted_at', 'is', null)
-        .eq('deleted_by_curator', false)
-        .order('deleted_at', ascending: false);
+    List<dynamic> storyList = [];
+    try {
+      // 1. Primary query: exclude stories deleted by curators
+      final response = await client
+          .from('stories')
+          .select('*, categories:category_id(name, slug)')
+          .eq('user_id', user.id)
+          .not('deleted_at', 'is', null)
+          .eq('deleted_by_curator', false)
+          .order('deleted_at', ascending: false);
+      storyList = response as List;
+    } catch (primaryErr) {
+      debugPrint('[AuthRepository.getMyTrashStories] Primary query notice (likely missing deleted_by_curator column): $primaryErr');
+      try {
+        // 2. Secondary query: query soft-deleted stories without deleted_by_curator condition
+        final response = await client
+            .from('stories')
+            .select('*, categories:category_id(name, slug)')
+            .eq('user_id', user.id)
+            .not('deleted_at', 'is', null)
+            .order('deleted_at', ascending: false);
+        storyList = response as List;
+      } catch (secondaryErr) {
+        debugPrint('[AuthRepository.getMyTrashStories] Secondary query notice: $secondaryErr');
+        try {
+          // 3. Fallback query: query all author stories and filter deleted_at in Dart memory
+          final response = await client
+              .from('stories')
+              .select('*, categories:category_id(name, slug)')
+              .eq('user_id', user.id)
+              .order('created_at', ascending: false);
 
-    final storyList = response as List;
+          final list = (response as List).where((item) {
+            final m = item as Map<String, dynamic>;
+            final isDeleted = m['deleted_at'] != null;
+            final isCuratorDel = m['deleted_by_curator'] == true;
+            return isDeleted && !isCuratorDel;
+          }).toList();
+
+          list.sort((a, b) {
+            final aDel = DateTime.tryParse((a as Map)['deleted_at']?.toString() ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
+            final bDel = DateTime.tryParse((b as Map)['deleted_at']?.toString() ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
+            return bDel.compareTo(aDel);
+          });
+          storyList = list;
+        } catch (finalErr) {
+          debugPrint('[AuthRepository.getMyTrashStories] Final fallback failed: $finalErr');
+          return [];
+        }
+      }
+    }
     return storyList.map((item) {
       final map = item as Map<String, dynamic>;
       String catName = 'General';

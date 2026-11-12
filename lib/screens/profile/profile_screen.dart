@@ -871,10 +871,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
         error: (err, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
-            child: Text(
-              'Could not load trash: $err',
-              textAlign: TextAlign.center,
-              style: AppTypography.uiBody.copyWith(color: AppColors.error),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline, color: AppColors.error, size: 36),
+                const SizedBox(height: 12),
+                Text(
+                  'Could not load trash',
+                  style: AppTypography.storyHeading.copyWith(fontSize: 16, color: AppColors.espresso),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '$err',
+                  textAlign: TextAlign.center,
+                  style: AppTypography.captionMeta.copyWith(color: AppColors.mutedCocoa, fontSize: 12),
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () => ref.invalidate(myTrashStoriesProvider),
+                  icon: const Icon(Icons.refresh, size: 16),
+                  label: const Text('Try Again'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.burntSienna,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
             ),
           ),
         ),

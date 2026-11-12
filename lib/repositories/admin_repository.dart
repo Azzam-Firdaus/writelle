@@ -480,14 +480,24 @@ class AdminRepository {
           debugPrint('AdminRepository.softDeleteStory RPC succeeded');
         } catch (_) {
           // 2. Direct table update fallback
-          await client
-              .from('stories')
-              .update({
-                'deleted_at': DateTime.now().toIso8601String(),
-                'deleted_by_curator': true,
-                'updated_at': DateTime.now().toIso8601String(),
-              })
-              .eq('id', storyId);
+          try {
+            await client
+                .from('stories')
+                .update({
+                  'deleted_at': DateTime.now().toIso8601String(),
+                  'deleted_by_curator': true,
+                  'updated_at': DateTime.now().toIso8601String(),
+                })
+                .eq('id', storyId);
+          } catch (_) {
+            await client
+                .from('stories')
+                .update({
+                  'deleted_at': DateTime.now().toIso8601String(),
+                  'updated_at': DateTime.now().toIso8601String(),
+                })
+                .eq('id', storyId);
+          }
         }
       } catch (e) {
         debugPrint('AdminRepository.softDeleteStory error: $e');
@@ -515,14 +525,24 @@ class AdminRepository {
           });
           debugPrint('AdminRepository.restoreStory RPC succeeded');
         } catch (_) {
-          await client
-              .from('stories')
-              .update({
-                'deleted_at': null,
-                'deleted_by_curator': false,
-                'updated_at': DateTime.now().toIso8601String(),
-              })
-              .eq('id', storyId);
+          try {
+            await client
+                .from('stories')
+                .update({
+                  'deleted_at': null,
+                  'deleted_by_curator': false,
+                  'updated_at': DateTime.now().toIso8601String(),
+                })
+                .eq('id', storyId);
+          } catch (_) {
+            await client
+                .from('stories')
+                .update({
+                  'deleted_at': null,
+                  'updated_at': DateTime.now().toIso8601String(),
+                })
+                .eq('id', storyId);
+          }
         }
       } catch (e) {
         debugPrint('AdminRepository.restoreStory error: $e');

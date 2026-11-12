@@ -225,3 +225,6 @@ BEGIN
   RETURN jsonb_build_object('success', true);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 9. RELOAD POSTGREST SCHEMA CACHE
+NOTIFY pgrst, 'reload schema';
