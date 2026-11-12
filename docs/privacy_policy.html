@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kebijakan Privasi — Writelle</title>
+  <style>
+    :root {
+      --bg: #F7F4EE;
+      --card-bg: #FFFFFF;
+      --text: #2C221E;
+      --muted: #6E5D53;
+      --accent: #B85D36;
+      --border: #E8DFD3;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Georgia, serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      margin: 0;
+      padding: 32px 16px;
+    }
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 36px 32px;
+      box-shadow: 0 4px 20px rgba(44, 34, 30, 0.05);
+      border: 1px solid var(--border);
+    }
+    h1 {
+      font-size: 26px;
+      color: var(--text);
+      margin-top: 0;
+      margin-bottom: 8px;
+    }
+    .badge {
+      display: inline-block;
+      background: #F0E8DB;
+      color: var(--accent);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+    h2 {
+      font-size: 17px;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+      margin-top: 28px;
+    }
+    p, li {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 8px;
+    }
+    strong {
+      color: var(--text);
+    }
+    .footer {
+      margin-top: 36px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Kebijakan Privasi Writelle</h1>
+    <div class="badge">Versi 1.0.0 • Pembaruan Terakhir: November 2026</div>
+
+    <h2>1. Pendahuluan</h2>
+    <p>Selamat datang di <strong>Writelle</strong> ("Aplikasi"). Writelle adalah wadah literatur dan suaka sastra pseudonim yang mengedepankan ketenangan, kejujuran berekspresi, dan privasi pembaca serta penulis. Kami menghormati hak privasi Anda dan berkomitmen untuk melindungi data pribadi yang Anda percayakan kepada kami.</p>
+
+    <h2>2. Data yang Kami Kumpulkan</h2>
+    <ul>
+      <li><strong>Informasi Akun:</strong> Alamat email dan kata sandi terenkripsi saat Anda mendaftarkan akun.</li>
+      <li><strong>Profil Pseudonim:</strong> Nama pena (pen name), kutipan biografi sukarela, dan foto avatar opsional yang Anda unggah.</li>
+      <li><strong>Konten Pengguna (UGC):</strong> Kisah, tulisan, pilihan kategori, serta komentar yang Anda terbitkan.</li>
+      <li><strong>Interaksi Pengguna:</strong> Apresiasi (suka/like), simpanan bacaan (bookmark), serta relasi antarakun (readers & following).</li>
+      <li><strong>Preferensi Anonimitas:</strong> Mode publikasi anonim (Pure Anonymity) untuk menyamarkan identitas pada kisah tertentu.</li>
+    </ul>
+
+    <h2>3. Cara Kami Mengumpulkan Data</h2>
+    <p>Kami mengumpulkan data secara langsung saat Anda mendaftar, menulis cerita, atau berinteraksi di dalam aplikasi. Jika menggunakan Google Sign-In, kami hanya menerima nama dan alamat email dasar untuk verifikasi akun.</p>
+
+    <h2>4. Tujuan dan Penggunaan Data</h2>
+    <ul>
+      <li>Menyediakan layanan inti autentikasi dan linimasa cerita.</li>
+      <li>Menjaga keamanan dan memoderasi konten dari pelanggaran.</li>
+      <li>Menyamarkan identitas penulis pada cerita yang berstatus anonim.</li>
+      <li><strong>Kami TIDAK menjual data Anda</strong> kepada pengiklan atau pihak ketiga komersial mana pun.</li>
+    </ul>
+
+    <h2>5. Penyimpanan dan Keamanan Data</h2>
+    <p>Data disimpan secara aman menggunakan infrastruktur Supabase (PostgreSQL) dengan standar enkripsi industri SSL/TLS saat transit data dan enkripsi at-rest. Akses data dibatasi secara ketat menggunakan Row Level Security (RLS) pada tingkat basis data.</p>
+
+    <h2>6. Layanan Pihak Ketiga</h2>
+    <ul>
+      <li><strong>Supabase Inc:</strong> Penyedia basis data dan autentikasi terenkripsi.</li>
+      <li><strong>Google Identity (Opsional):</strong> Hanya digunakan saat Anda secara sadar memilih masuk dengan Google.</li>
+    </ul>
+
+    <h2>7. Penyimpanan Sesi Lokal</h2>
+    <p>Aplikasi menggunakan penyimpanan lokal perangkat (SharedPreferences) untuk menyimpan token sesi terenkripsi agar Anda tidak perlu masuk berulang kali. Kami tidak menggunakan cookie pelacak iklan pihak ketiga.</p>
+
+    <h2>8. Retensi Data</h2>
+    <p>Cerita yang dihapus disimpan sementara selama 14 hari di ruang karantina (Trash) untuk pemulihan darurat sebelum dihapus secara permanen dari server. Data profil dan karya aktif disimpan selama akun Anda berstatus aktif.</p>
+
+    <h2>9. Hak Penghapusan Akun & Data (Account Deletion)</h2>
+    <p>Sesuai kebijakan Google Play Store, Anda berhak menghapus akun Anda beserta seluruh data pribadi kapan pun:</p>
+    <ul>
+      <li><strong>Di Dalam Aplikasi:</strong> Buka Profil &gt; Ketuk ikon kunci di pojok kanan atas &gt; Pilih "Delete Sanctuary Account". Seluruh data profil, kisah, dan data otentikasi akan dihapus permanen seketika.</li>
+      <li><strong>Melalui Formulir Web:</strong> Kunjungi laman penghapusan akun kami di <a href="account_deletion.html">Laman Penghapusan Akun Writelle</a> atau hubungi pengembang kami.</li>
+    </ul>
+
+    <h2>10. Privasi Anak-Anak</h2>
+    <p>Writelle tidak ditujukan untuk anak-anak di bawah usia 13 tahun. Kami tidak secara sadar mengumpulkan data anak di bawah 13 tahun.</p>
+
+    <h2>11. Kontak Kami</h2>
+    <p>Jika Anda memiliki pertanyaan mengenai kebijakan privasi ini atau pengelolaan data Anda, hubungi kami di:</p>
+    <p><strong>Email:</strong> isamualfian2@gmail.com<br><strong>Platform:</strong> Writelle Sanctuary</p>
+
+    <div class="footer">
+      &copy; 2026 Writelle. Hak Cipta Dilindungi Undang-Undang.
+    </div>
+  </div>
+</body>
+</html>

@@ -1,4 +1,4 @@
-package com.example.writtle;
+package com.writelle.sanctuary;
 
 import io.flutter.embedding.android.FlutterActivity;
 

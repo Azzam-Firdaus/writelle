@@ -4,7 +4,7 @@ import '../theme/app_typography.dart';
 
 enum EditorialButtonVariant { primary, secondary, outlined, text }
 
-/// A reusable button styled for Editorial Minimalism.
+/// A reusable tactile button styled for Editorial Luxury.
 class EditorialButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -39,8 +39,8 @@ class EditorialButton extends StatelessWidget {
               strokeWidth: 2,
               valueColor: AlwaysStoppedAnimation<Color>(
                 variant == EditorialButtonVariant.primary
-                    ? AppColors.backgroundLight
-                    : AppColors.textPrimary,
+                    ? AppColors.warmIvory
+                    : AppColors.espresso,
               ),
             ),
           ),
@@ -52,7 +52,9 @@ class EditorialButton extends StatelessWidget {
         Text(
           label,
           style: AppTypography.buttonText.copyWith(
-            color: _getTextColor(),
+            color: _getTextColor(context),
+            fontWeight: FontWeight.w600,
+            fontSize: 13.5,
           ),
         ),
       ],
@@ -64,39 +66,54 @@ class EditorialButton extends StatelessWidget {
         button = ElevatedButton(
           onPressed: effectiveOnPressed,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.textPrimary,
-            foregroundColor: AppColors.backgroundLight,
+            backgroundColor: AppColors.burntSienna,
+            foregroundColor: Colors.white,
+            elevation: 0,
             minimumSize: const Size(88, 48),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
           child: childContent,
         );
         break;
+
       case EditorialButtonVariant.secondary:
         button = ElevatedButton(
           onPressed: effectiveOnPressed,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.accentPrimary,
-            foregroundColor: Colors.white,
+            backgroundColor: AppColors.espresso,
+            foregroundColor: AppColors.warmIvory,
+            elevation: 0,
             minimumSize: const Size(88, 48),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
           child: childContent,
         );
         break;
+
       case EditorialButtonVariant.outlined:
         button = OutlinedButton(
           onPressed: effectiveOnPressed,
           style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: AppColors.borderLight),
+            foregroundColor: AppColors.textPrimaryColor(context),
+            side: BorderSide(color: AppColors.borderColor(context), width: 1.5),
             minimumSize: const Size(88, 48),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
           child: childContent,
         );
         break;
+
       case EditorialButtonVariant.text:
         button = TextButton(
           onPressed: effectiveOnPressed,
           style: TextButton.styleFrom(
-            foregroundColor: AppColors.textPrimary,
+            foregroundColor: AppColors.burntSienna,
             minimumSize: const Size(64, 44),
           ),
           child: childContent,
@@ -107,18 +124,20 @@ class EditorialButton extends StatelessWidget {
     if (width != null) {
       return SizedBox(width: width, child: button);
     }
+
     return button;
   }
 
-  Color _getTextColor() {
+  Color _getTextColor(BuildContext context) {
     switch (variant) {
       case EditorialButtonVariant.primary:
-        return AppColors.backgroundLight;
-      case EditorialButtonVariant.secondary:
         return Colors.white;
+      case EditorialButtonVariant.secondary:
+        return AppColors.warmIvory;
       case EditorialButtonVariant.outlined:
+        return AppColors.textPrimaryColor(context);
       case EditorialButtonVariant.text:
-        return AppColors.textPrimary;
+        return AppColors.burntSienna;
     }
   }
 }

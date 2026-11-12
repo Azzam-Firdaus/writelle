@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "skills": {
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "computedHash": "b146008599c31057cef1c145774cea5d5afb30e8f43fa802e47a4b461419aaaf"
+    },
+    "flutter-apply-architecture-best-practices": {
+      "source": "flutter/agent-plugins",
+      "sourceType": "github",
+      "skillPath": "skills/flutter-apply-architecture-best-practices/SKILL.md",
+      "computedHash": "baeb208b1cab90c559677626dbd101b96ba93f803cbed85122abdadeb3283a8b"
+    },
+    "flutter-performance": {
+      "source": "zakariaf/flutter-skills",
+      "sourceType": "github",
+      "skillPath": "skills/flutter-performance/SKILL.md",
+      "computedHash": "b9f5c4d2885e7a8ebcae6b34f37b104937f81a92a089619430a12b6e419a3826"
+    },
+    "flutter-reducing-app-size": {
+      "source": "ibold-dev/flutter-skills",
+      "sourceType": "github",
+      "skillPath": "skills/flutter-reducing-app-size/SKILL.md",
+      "computedHash": "1501a6fe105eddf805139d5ff167c1ab4992dc69e6dd1bd2c8eaba4732a8e70c"
+    }
+  }
+}

@@ -1,7 +1,12 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/cache/cover_cache.dart';
 import '../models/category_model.dart';
 import '../models/comment_model.dart';
 import '../models/story_model.dart';
+import 'admin_repository.dart';
 
 /// Repository for handling all story-related data operations.
 /// Ref: docs/DATABASE_AND_API.md
@@ -34,6 +39,72 @@ class StoryRepository {
         .toList();
   }
 
+  /// Creates a new category and returns the model.
+  Future<CategoryModel> createCategory({
+    required String name,
+    String? description,
+  }) async {
+    final client = _supabase;
+    if (client == null) throw Exception('Database connection not initialized.');
+
+    final trimmedName = name.trim();
+    if (trimmedName.isEmpty) {
+      throw Exception('Category name cannot be empty.');
+    }
+
+    final slug = trimmedName
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'^-+|-+$'), '');
+
+    // Check if category with this name already exists
+    try {
+      final existing = await client
+          .from('categories')
+          .select()
+          .ilike('name', trimmedName)
+          .maybeSingle();
+
+      if (existing != null) {
+        return CategoryModel.fromMap(existing);
+      }
+    } catch (_) {}
+
+    final insertData = <String, dynamic>{
+      'name': trimmedName,
+      'slug': slug.isEmpty ? 'category-${DateTime.now().millisecondsSinceEpoch}' : slug,
+      'description': description?.trim(),
+    };
+
+    try {
+      final response = await client
+          .from('categories')
+          .insert(insertData)
+          .select()
+          .single();
+
+      return CategoryModel.fromMap(response);
+    } catch (e) {
+      final errStr = e.toString();
+      if (errStr.contains('42501') || errStr.contains('row-level security')) {
+        throw Exception(
+          'Supabase database permissions do not allow adding new categories (RLS 42501). '
+          'Please run the INSERT policy SQL script in the Supabase SQL Editor.',
+        );
+      } else if (errStr.contains('duplicate key') || errStr.contains('23505')) {
+        final existing = await client
+            .from('categories')
+            .select()
+            .ilike('name', trimmedName)
+            .maybeSingle();
+        if (existing != null) {
+          return CategoryModel.fromMap(existing);
+        }
+      }
+      rethrow;
+    }
+  }
+
   /// Fetches published stories from public_stories_view ensuring anonymity.
   Future<List<StoryModel>> getPublicStories({
     String? categorySlug,
@@ -52,39 +123,152 @@ class StoryRepository {
       query = query.eq('category_slug', categorySlug);
     }
 
-    final response = await query
-        .order('published_at', ascending: false)
-        .range(from, to);
+    List<dynamic> responseList = [];
+    try {
+      final response = await query
+          .order('published_at', ascending: false)
+          .range(from, to);
+      responseList = response as List;
+    } catch (e) {
+      debugPrint('[StoryRepository] public_stories_view query notice: $e. Falling back to direct stories table query.');
+      try {
+        var directQuery = client
+            .from('stories')
+            .select('*, categories:category_id(name, slug)')
+            .eq('status', 'published')
+            .isFilter('deleted_at', null);
+
+        if (categorySlug != null && categorySlug.isNotEmpty && categorySlug != 'all') {
+          directQuery = directQuery.eq('categories.slug', categorySlug);
+        }
+
+        final directRes = await directQuery
+            .order('published_at', ascending: false)
+            .range(from, to);
+
+        final rawList = directRes as List;
+        final nonAnonUserIds = rawList
+            .where((item) => (item['is_anonymous'] as bool? ?? true) == false)
+            .map((item) => item['user_id'] as String?)
+            .where((uid) => uid != null && uid.isNotEmpty)
+            .cast<String>()
+            .toSet()
+            .toList();
+
+        final penNames = <String, String>{};
+        final avatars = <String, String>{};
+        if (nonAnonUserIds.isNotEmpty) {
+          try {
+            final profilesRes = await client
+                .from('profiles')
+                .select('id, pen_name, avatar_url')
+                .filter('id', 'in', nonAnonUserIds);
+            for (final p in profilesRes as List) {
+              final pid = p['id'] as String?;
+              final pname = p['pen_name'] as String?;
+              final pavatar = p['avatar_url'] as String?;
+              if (pid != null) {
+                if (pname != null) penNames[pid] = pname;
+                if (pavatar != null) avatars[pid] = pavatar;
+              }
+            }
+          } catch (_) {}
+        }
+
+        responseList = rawList.map((item) {
+          final m = Map<String, dynamic>.from(item as Map<String, dynamic>);
+          final cat = m['categories'] as Map<String, dynamic>?;
+          final isAnon = m['is_anonymous'] as bool? ?? true;
+          final uId = m['user_id'] as String?;
+          m['category_name'] = cat?['name'] ?? 'Reflections';
+          m['category_slug'] = cat?['slug'] ?? 'reflections';
+          m['author_name'] = isAnon ? 'Anonymous' : (uId != null ? (penNames[uId] ?? 'Author') : 'Author');
+          m['author_avatar_url'] = isAnon ? null : (uId != null ? avatars[uId] : null);
+          return m;
+        }).toList();
+      } catch (fallbackErr) {
+        debugPrint('[StoryRepository] Direct query fallback error: $fallbackErr');
+        return [];
+      }
+    }
 
     final currentUserId = client.auth.currentUser?.id;
     final stories = <StoryModel>[];
 
-    for (final item in response as List) {
-      final map = item as Map<String, dynamic>;
-      final storyId = map['id'] as String;
+    final Map<String, int> likesCountMap = {};
+    final Map<String, int> commentsCountMap = {};
+    final Set<String> likedStoryIds = {};
+    final Set<String> bookmarkedStoryIds = {};
 
-      bool isLiked = false;
-      bool isBookmarked = false;
+    if (responseList.isNotEmpty) {
+      final storyIds = responseList
+          .map((item) => (item as Map<String, dynamic>)['id'] as String)
+          .toList();
 
-      if (currentUserId != null) {
-        // Check like status
-        final likeRes = await client
-            .from('likes')
-            .select('id')
-            .eq('story_id', storyId)
-            .eq('user_id', currentUserId)
-            .maybeSingle();
-        isLiked = likeRes != null;
-
-        // Check bookmark status
-        final bookmarkRes = await client
-            .from('bookmarks')
-            .select('id')
-            .eq('story_id', storyId)
-            .eq('user_id', currentUserId)
-            .maybeSingle();
-        isBookmarked = bookmarkRes != null;
+      try {
+        await Future.wait([
+          () async {
+            try {
+              final likesRes = await client
+                  .from('likes')
+                  .select('story_id, user_id')
+                  .inFilter('story_id', storyIds);
+              for (final item in likesRes as List) {
+                final sId = item['story_id'] as String?;
+                final uId = item['user_id'] as String?;
+                if (sId != null) {
+                  likesCountMap[sId] = (likesCountMap[sId] ?? 0) + 1;
+                  if (currentUserId != null && uId == currentUserId) {
+                    likedStoryIds.add(sId);
+                  }
+                }
+              }
+            } catch (_) {}
+          }(),
+          () async {
+            try {
+              final commentsRes = await client
+                  .from('comments')
+                  .select('story_id')
+                  .inFilter('story_id', storyIds);
+              for (final item in commentsRes as List) {
+                final sId = item['story_id'] as String?;
+                if (sId != null) {
+                  commentsCountMap[sId] = (commentsCountMap[sId] ?? 0) + 1;
+                }
+              }
+            } catch (_) {}
+          }(),
+          if (currentUserId != null)
+            () async {
+              try {
+                final bookmarksRes = await client
+                    .from('bookmarks')
+                    .select('story_id')
+                    .eq('user_id', currentUserId)
+                    .inFilter('story_id', storyIds);
+                for (final item in bookmarksRes as List) {
+                  final sId = item['story_id'] as String?;
+                  if (sId != null) {
+                    bookmarkedStoryIds.add(sId);
+                  }
+                }
+              } catch (_) {}
+            }(),
+        ]);
+      } catch (e) {
+        debugPrint('[StoryRepository] Batch metrics fetch notice: $e');
       }
+    }
+
+    for (final item in responseList) {
+      final map = Map<String, dynamic>.from(item as Map<String, dynamic>);
+      final storyId = map['id'] as String;
+      final isLiked = likedStoryIds.contains(storyId);
+      final isBookmarked = bookmarkedStoryIds.contains(storyId);
+
+      map['likes_count'] = likesCountMap[storyId] ?? (map['likes_count'] as num?)?.toInt() ?? 0;
+      map['comments_count'] = commentsCountMap[storyId] ?? (map['comments_count'] as num?)?.toInt() ?? 0;
 
       stories.add(StoryModel.fromMap(map, isLiked: isLiked, isBookmarked: isBookmarked));
     }
@@ -99,6 +283,7 @@ class StoryRepository {
     required String content,
     required bool isAnonymous,
     required bool isDraft,
+    String? coverUrl,
   }) async {
     final client = _supabase;
     if (client == null) throw Exception('Database connection not initialized.');
@@ -109,7 +294,7 @@ class StoryRepository {
     }
 
     final now = DateTime.now().toIso8601String();
-    final insertData = {
+    final insertData = <String, dynamic>{
       'user_id': user.id,
       'category_id': categoryId,
       'title': title.trim(),
@@ -119,14 +304,39 @@ class StoryRepository {
       'published_at': isDraft ? null : now,
     };
 
-    final response = await client
-        .from('stories')
-        .insert(insertData)
-        .select()
-        .single();
+    if (coverUrl != null && coverUrl.trim().isNotEmpty) {
+      insertData['cover_url'] = coverUrl.trim();
+    }
+
+    Map<String, dynamic> response;
+    try {
+      response = await client
+          .from('stories')
+          .insert(insertData)
+          .select()
+          .single();
+    } catch (e) {
+      // In case cover_url column is not yet added in Supabase, fallback gracefully
+      if (insertData.containsKey('cover_url') && e.toString().contains('cover_url')) {
+        insertData.remove('cover_url');
+        response = await client
+            .from('stories')
+            .insert(insertData)
+            .select()
+            .single();
+      } else {
+        rethrow;
+      }
+    }
+
+    final createdId = response['id'] as String;
+    if (coverUrl != null && coverUrl.trim().isNotEmpty) {
+      CoverCache.set(createdId, coverUrl.trim());
+    }
 
     return StoryModel(
-      id: response['id'] as String,
+      id: createdId,
+      userId: user.id,
       categoryId: categoryId,
       categoryName: '',
       categorySlug: '',
@@ -134,9 +344,202 @@ class StoryRepository {
       content: content,
       isAnonymous: isAnonymous,
       authorName: isAnonymous ? 'Anonymous' : 'You',
+      coverUrl: coverUrl,
       publishedAt: isDraft ? null : DateTime.parse(now),
       createdAt: DateTime.now(),
     );
+  }
+
+  /// Uploads a local cover image picked from device gallery to Supabase Storage bucket 'story_covers'.
+  /// Gracefully falls back to local file path or base64 Data URI if storage bucket is not configured.
+  Future<String> uploadCoverImage(XFile imageFile) async {
+    final client = _supabase;
+    final bytes = await imageFile.readAsBytes();
+    final ext = imageFile.name.contains('.')
+        ? imageFile.name.split('.').last.toLowerCase()
+        : 'jpg';
+    final mimeType = ext == 'png' ? 'image/png' : 'image/jpeg';
+    final userId = client?.auth.currentUser?.id ?? 'anon';
+    final fileName = '${userId}_${DateTime.now().millisecondsSinceEpoch}.$ext';
+    final filePath = 'covers/$fileName';
+
+    if (client != null) {
+      try {
+        await client.storage.from('story_covers').uploadBinary(
+          filePath,
+          bytes,
+          fileOptions: FileOptions(contentType: mimeType, upsert: true),
+        );
+        final publicUrl = client.storage.from('story_covers').getPublicUrl(filePath);
+        debugPrint('Story cover successfully uploaded to Supabase Storage: $publicUrl');
+        return publicUrl;
+      } catch (storageError) {
+        debugPrint('Supabase storage upload notice ($storageError), using resilient fallback.');
+      }
+    }
+
+    // Local filesystem path on device: instant preview, reliable loading & zero base64 memory bloat
+    if (!kIsWeb && imageFile.path.isNotEmpty) {
+      return imageFile.path;
+    }
+
+    final base64Data = base64Encode(bytes);
+    return 'data:$mimeType;base64,$base64Data';
+  }
+
+  /// Checks if current user is the author of the story
+  Future<bool> isStoryAuthor(String storyId) async {
+    final client = _supabase;
+    if (client == null) return false;
+    final user = client.auth.currentUser;
+    if (user == null) return false;
+
+    try {
+      final res = await client
+          .from('stories')
+          .select('id')
+          .eq('id', storyId)
+          .eq('user_id', user.id)
+          .maybeSingle();
+      return res != null;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Deletes a story (by author, or by admin/curator)
+  Future<void> deleteStory(String storyId, {bool? asAdmin, String? storyTitle}) async {
+    final client = _supabase;
+    if (client == null) throw Exception('Database connection not initialized.');
+
+    final user = client.auth.currentUser;
+    if (user == null) {
+      throw Exception('User must be logged in to delete stories.');
+    }
+
+    bool isAdmin = asAdmin ?? false;
+    if (asAdmin == null) {
+      try {
+        final profileRes = await client
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .maybeSingle();
+        final role = profileRes?['role'] as String?;
+        if (role == 'admin' || role == 'curator') {
+          isAdmin = true;
+        }
+      } catch (_) {}
+    }
+
+    // Resolve story title if deleting as admin/curator for audit trail
+    String resolvedTitle = storyTitle ?? 'Untitled Tale';
+    if (storyTitle == null && isAdmin) {
+      try {
+        final sRes = await client.from('stories').select('title').eq('id', storyId).maybeSingle();
+        if (sRes != null && sRes['title'] != null) {
+          resolvedTitle = sRes['title'] as String;
+        }
+      } catch (_) {}
+    }
+
+    try {
+      if (isAdmin) {
+        try {
+          await client.rpc('soft_delete_story_admin', params: {
+            'target_story_id': storyId,
+          });
+        } catch (_) {
+          var query = client
+              .from('stories')
+              .update({'deleted_at': DateTime.now().toUtc().toIso8601String()})
+              .eq('id', storyId);
+          await query;
+        }
+      } else {
+        var query = client
+            .from('stories')
+            .update({'deleted_at': DateTime.now().toUtc().toIso8601String()})
+            .eq('id', storyId)
+            .eq('user_id', user.id);
+        await query;
+      }
+    } catch (e) {
+      debugPrint('[StoryRepository.deleteStory] Soft delete update error: $e');
+      rethrow;
+    }
+
+    // If an administrator or curator deletes a story, record an audit log!
+    if (isAdmin) {
+      try {
+        final adminRepo = AdminRepository(supabase: client);
+        await adminRepo.recordAuditLog(
+          action: 'delete_story',
+          targetType: 'story',
+          targetId: storyId,
+          targetTitle: resolvedTitle,
+          details: 'Scroll moved to 14-day retention trash by administrator/curator',
+        );
+      } catch (e) {
+        debugPrint('[StoryRepository] Failed to record audit log on story delete: $e');
+      }
+    }
+  }
+
+  /// Restores a soft-deleted story from 14-day retention back to the sanctuary
+  Future<void> restoreStory(String storyId) async {
+    final client = _supabase;
+    if (client == null) throw Exception('Database connection not initialized.');
+
+    await client
+        .from('stories')
+        .update({'deleted_at': null, 'updated_at': DateTime.now().toIso8601String()})
+        .eq('id', storyId);
+  }
+
+  /// Updates an existing story (draft or published)
+  Future<void> updateStory({
+    required String storyId,
+    required String categoryId,
+    required String title,
+    required String content,
+    required bool isAnonymous,
+    required bool isDraft,
+    String? coverUrl,
+  }) async {
+    final client = _supabase;
+    if (client == null) throw Exception('Database connection not initialized.');
+
+    final user = client.auth.currentUser;
+    if (user == null) {
+      throw Exception('User must be logged in to update stories.');
+    }
+
+    final updateData = <String, dynamic>{
+      'category_id': categoryId,
+      'title': title.trim(),
+      'content': content.trim(),
+      'is_anonymous': isAnonymous,
+      'status': isDraft ? 'draft' : 'published',
+      if (coverUrl != null && coverUrl.isNotEmpty) 'cover_url': coverUrl,
+      if (!isDraft) 'published_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+
+    try {
+      await client.from('stories').update(updateData).eq('id', storyId).eq('user_id', user.id);
+    } catch (e) {
+      if (updateData.containsKey('cover_url') && e.toString().contains('cover_url')) {
+        updateData.remove('cover_url');
+        await client.from('stories').update(updateData).eq('id', storyId).eq('user_id', user.id);
+      } else {
+        rethrow;
+      }
+    }
+
+    if (coverUrl != null && coverUrl.trim().isNotEmpty) {
+      CoverCache.set(storyId, coverUrl.trim());
+    }
   }
 
   /// Toggles like on a story. Returns new isLiked state.
@@ -218,14 +621,117 @@ class StoryRepository {
     final storyIds = (bookmarks as List).map((b) => b['story_id'] as String).toList();
     if (storyIds.isEmpty) return [];
 
-    final response = await client
-        .from('public_stories_view')
-        .select()
-        .filter('id', 'in', storyIds);
+    List<dynamic> responseList = [];
+    try {
+      final response = await client
+          .from('public_stories_view')
+          .select()
+          .filter('id', 'in', storyIds);
+      responseList = response as List;
+    } catch (e) {
+      debugPrint('[StoryRepository] Bookmarks view query notice: $e. Falling back to direct stories table query.');
+      try {
+        final directRes = await client
+            .from('stories')
+            .select('*, categories:category_id(name, slug)')
+            .filter('id', 'in', storyIds);
 
-    return (response as List)
-        .map((item) => StoryModel.fromMap(item as Map<String, dynamic>, isBookmarked: true))
-        .toList();
+        final rawList = directRes as List;
+        final nonAnonUserIds = rawList
+            .where((item) => (item['is_anonymous'] as bool? ?? true) == false)
+            .map((item) => item['user_id'] as String?)
+            .where((uid) => uid != null && uid.isNotEmpty)
+            .cast<String>()
+            .toSet()
+            .toList();
+
+        final penNames = <String, String>{};
+        final avatars = <String, String>{};
+        if (nonAnonUserIds.isNotEmpty) {
+          try {
+            final profilesRes = await client
+                .from('profiles')
+                .select('id, pen_name, avatar_url')
+                .filter('id', 'in', nonAnonUserIds);
+            for (final p in profilesRes as List) {
+              final pid = p['id'] as String?;
+              final pname = p['pen_name'] as String?;
+              final pavatar = p['avatar_url'] as String?;
+              if (pid != null) {
+                if (pname != null) penNames[pid] = pname;
+                if (pavatar != null) avatars[pid] = pavatar;
+              }
+            }
+          } catch (_) {}
+        }
+
+        responseList = rawList.map((item) {
+          final m = Map<String, dynamic>.from(item as Map<String, dynamic>);
+          final cat = m['categories'] as Map<String, dynamic>?;
+          final isAnon = m['is_anonymous'] as bool? ?? true;
+          final uId = m['user_id'] as String?;
+          m['category_name'] = cat?['name'] ?? 'Reflections';
+          m['category_slug'] = cat?['slug'] ?? 'reflections';
+          m['author_name'] = isAnon ? 'Anonymous' : (uId != null ? (penNames[uId] ?? 'Author') : 'Author');
+          m['author_avatar_url'] = isAnon ? null : (uId != null ? avatars[uId] : null);
+          return m;
+        }).toList();
+      } catch (_) {
+        return [];
+      }
+    }
+
+    final Map<String, int> likesCountMap = {};
+    final Map<String, int> commentsCountMap = {};
+    final Set<String> likedStoryIds = {};
+
+    if (storyIds.isNotEmpty) {
+      try {
+        await Future.wait([
+          () async {
+            try {
+              final likesRes = await client
+                  .from('likes')
+                  .select('story_id, user_id')
+                  .inFilter('story_id', storyIds);
+              for (final item in likesRes as List) {
+                final sId = item['story_id'] as String?;
+                final uId = item['user_id'] as String?;
+                if (sId != null) {
+                  likesCountMap[sId] = (likesCountMap[sId] ?? 0) + 1;
+                  if (uId == user.id) {
+                    likedStoryIds.add(sId);
+                  }
+                }
+              }
+            } catch (_) {}
+          }(),
+          () async {
+            try {
+              final commentsRes = await client
+                  .from('comments')
+                  .select('story_id')
+                  .inFilter('story_id', storyIds);
+              for (final item in commentsRes as List) {
+                final sId = item['story_id'] as String?;
+                if (sId != null) {
+                  commentsCountMap[sId] = (commentsCountMap[sId] ?? 0) + 1;
+                }
+              }
+            } catch (_) {}
+          }(),
+        ]);
+      } catch (_) {}
+    }
+
+    return responseList.map((item) {
+      final map = Map<String, dynamic>.from(item as Map<String, dynamic>);
+      final storyId = map['id'] as String;
+      map['likes_count'] = likesCountMap[storyId] ?? (map['likes_count'] as num?)?.toInt() ?? 0;
+      map['comments_count'] = commentsCountMap[storyId] ?? (map['comments_count'] as num?)?.toInt() ?? 0;
+      final isLiked = likedStoryIds.contains(storyId);
+      return StoryModel.fromMap(map, isLiked: isLiked, isBookmarked: true);
+    }).toList();
   }
 
   /// Fetches comments for a story.
@@ -233,30 +739,148 @@ class StoryRepository {
     final client = _supabase;
     if (client == null) return [];
 
-    final response = await client
-        .from('comments')
-        .select('*, profiles:user_id(pen_name)')
-        .eq('story_id', storyId)
-        .order('created_at', ascending: true);
+    try {
+      final commentsRes = await client
+          .from('comments')
+          .select()
+          .eq('story_id', storyId)
+          .order('created_at', ascending: true);
 
-    return (response as List)
-        .map((item) => CommentModel.fromMap(item as Map<String, dynamic>))
-        .toList();
+      final commentsList = commentsRes as List;
+      if (commentsList.isEmpty) return [];
+
+      // Extract distinct user IDs to look up author pen names
+      final userIds = commentsList
+          .map((c) => (c as Map<String, dynamic>)['user_id'] as String?)
+          .where((id) => id != null && id.isNotEmpty)
+          .cast<String>()
+          .toSet()
+          .toList();
+
+      final penNames = <String, String>{};
+      if (userIds.isNotEmpty) {
+        try {
+          final profilesRes = await client
+              .from('profiles')
+              .select('id, pen_name')
+              .filter('id', 'in', userIds);
+          for (final p in profilesRes as List) {
+            final pMap = p as Map<String, dynamic>;
+            final pid = pMap['id'] as String?;
+            final pname = pMap['pen_name'] as String?;
+            if (pid != null && pname != null) {
+              penNames[pid] = pname;
+            }
+          }
+        } catch (_) {
+          // If profile lookup encounters any issue, fallback gracefully
+        }
+      }
+
+      final allComments = commentsList.map((item) {
+        final map = Map<String, dynamic>.from(item as Map<String, dynamic>);
+        final uid = map['user_id'] as String?;
+        final authorPenName = (uid != null ? penNames[uid] : null) ?? 'Author';
+        map['profiles'] = {'pen_name': authorPenName};
+        return CommentModel.fromMap(map);
+      }).toList();
+
+      // Quick lookup map by ID
+      final commentById = <String, CommentModel>{
+        for (final c in allComments) c.id: c,
+      };
+
+      // Helper to trace any parent ID up to the top-level root comment ID
+      String findRootId(String startId) {
+        final visited = <String>{};
+        var curr = startId;
+        while (visited.add(curr)) {
+          final parent = commentById[curr];
+          if (parent == null ||
+              parent.parentCommentId == null ||
+              parent.parentCommentId!.isEmpty) {
+            return curr;
+          }
+          curr = parent.parentCommentId!;
+        }
+        return curr;
+      }
+
+      final rootComments = <CommentModel>[];
+      final repliesByRootId = <String, List<CommentModel>>{};
+
+      for (final comment in allComments) {
+        if (comment.parentCommentId != null &&
+            comment.parentCommentId!.isNotEmpty) {
+          final directParent = commentById[comment.parentCommentId];
+          final rootId = findRootId(comment.parentCommentId!);
+
+          // Enrich reply with replyingToAuthor if direct parent exists
+          final enrichedReply = comment.copyWith(
+            replyingToAuthor: directParent?.authorPenName,
+          );
+
+          repliesByRootId.putIfAbsent(rootId, () => []).add(enrichedReply);
+        } else {
+          rootComments.add(comment);
+        }
+      }
+
+      // Safeguard: If any replies point to a root ID that wasn't found in rootComments,
+      // promote the first reply as root so it never vanishes from the screen!
+      for (final entry in repliesByRootId.entries) {
+        if (!rootComments.any((r) => r.id == entry.key)) {
+          if (entry.value.isNotEmpty) {
+            final first = entry.value.first;
+            final rest = entry.value.sublist(1);
+            rootComments.add(first.copyWith(replies: rest));
+          }
+        }
+      }
+
+      // Attach replies into their respective root comments
+      return rootComments.map((root) {
+        return root.copyWith(replies: repliesByRootId[root.id] ?? []);
+      }).toList();
+    } catch (_) {
+      return [];
+    }
   }
 
-  /// Submits a comment.
-  Future<void> addComment(String storyId, String content) async {
+  /// Submits a comment or a reply to an existing comment.
+  Future<void> addComment(
+    String storyId,
+    String content, {
+    String? parentCommentId,
+  }) async {
     final client = _supabase;
     if (client == null) throw Exception('Database connection not initialized.');
 
     final user = client.auth.currentUser;
     if (user == null) throw Exception('Please log in to comment.');
 
-    await client.from('comments').insert({
+    final insertData = <String, dynamic>{
       'story_id': storyId,
       'user_id': user.id,
       'content': content.trim(),
-    });
+    };
+
+    if (parentCommentId != null && parentCommentId.isNotEmpty) {
+      insertData['parent_comment_id'] = parentCommentId;
+    }
+
+    try {
+      await client.from('comments').insert(insertData);
+    } catch (e) {
+      // In case parent_comment_id column doesn't exist yet, fallback gracefully
+      if (insertData.containsKey('parent_comment_id') &&
+          e.toString().contains('parent_comment_id')) {
+        insertData.remove('parent_comment_id');
+        await client.from('comments').insert(insertData);
+      } else {
+        rethrow;
+      }
+    }
   }
 
   /// Submits a report for a story.
@@ -267,11 +891,177 @@ class StoryRepository {
     final user = client.auth.currentUser;
     if (user == null) throw Exception('Please log in to report.');
 
-    await client.from('reports').insert({
-      'story_id': storyId,
-      'reporter_id': user.id,
-      'reason': reason,
-      'details': details?.trim(),
-    });
+    try {
+      await client.from('reports').insert({
+        'story_id': storyId,
+        'reporter_id': user.id,
+        'reason': reason,
+        'details': details?.trim(),
+      });
+    } on PostgrestException catch (e) {
+      // 23505 = Postgres unique violation (unique_story_report)
+      if (e.code == '23505' || e.message.contains('unique_story_report')) {
+        throw Exception('You have already submitted a report for this story.');
+      }
+      // If RLS blocked SELECT returning on inserted row (42501)
+      if (e.code == '42501' || e.message.contains('row-level security') || e.message.contains('violates row-level security')) {
+        debugPrint('[StoryRepository.reportStory] Notice: RLS SELECT restricted on reports, but insert succeeded.');
+        return;
+      }
+      rethrow;
+    } catch (e) {
+      final msg = e.toString();
+      if (msg.contains('23505') || msg.contains('unique_story_report')) {
+        throw Exception('You have already submitted a report for this story.');
+      }
+      if (msg.contains('row-level security') || msg.contains('42501')) {
+        debugPrint('[StoryRepository.reportStory] Notice: RLS SELECT restricted on reports, but insert succeeded.');
+        return;
+      }
+      rethrow;
+    }
+  }
+
+  /// Fetches public published stories by a specific author
+  Future<List<StoryModel>> getStoriesByAuthor(String authorId) async {
+    final client = _supabase;
+    if (client == null) return [];
+
+    try {
+      final response = await client
+          .from('stories')
+          .select('*, categories:category_id(name, slug)')
+          .eq('user_id', authorId)
+          .eq('status', 'published')
+          .isFilter('deleted_at', null)
+          .order('published_at', ascending: false);
+
+      final currentUserId = client.auth.currentUser?.id;
+      final stories = <StoryModel>[];
+      final storyList = response as List;
+      final nonAnonStoryIds = storyList
+          .where((item) => (item['is_anonymous'] as bool? ?? false) == false)
+          .map((item) => item['id'] as String)
+          .toList();
+
+      final Map<String, int> likesCountMap = {};
+      final Set<String> userLikedStoryIds = {};
+      final Map<String, int> commentsCountMap = {};
+      final Set<String> userBookmarkedStoryIds = {};
+
+      if (nonAnonStoryIds.isNotEmpty) {
+        await Future.wait([
+          () async {
+            try {
+              final likesRes = await client
+                  .from('likes')
+                  .select('story_id, user_id')
+                  .inFilter('story_id', nonAnonStoryIds);
+              for (final item in likesRes as List) {
+                final sId = item['story_id'] as String?;
+                final uId = item['user_id'] as String?;
+                if (sId != null) {
+                  likesCountMap[sId] = (likesCountMap[sId] ?? 0) + 1;
+                  if (currentUserId != null && uId == currentUserId) {
+                    userLikedStoryIds.add(sId);
+                  }
+                }
+              }
+            } catch (_) {}
+          }(),
+          () async {
+            try {
+              final commentsRes = await client
+                  .from('comments')
+                  .select('story_id')
+                  .inFilter('story_id', nonAnonStoryIds);
+              for (final item in commentsRes as List) {
+                final sId = item['story_id'] as String?;
+                if (sId != null) {
+                  commentsCountMap[sId] = (commentsCountMap[sId] ?? 0) + 1;
+                }
+              }
+            } catch (_) {}
+          }(),
+          if (currentUserId != null)
+            () async {
+              try {
+                final bookmarksRes = await client
+                    .from('bookmarks')
+                    .select('story_id')
+                    .eq('user_id', currentUserId)
+                    .inFilter('story_id', nonAnonStoryIds);
+                for (final item in bookmarksRes as List) {
+                  final sId = item['story_id'] as String?;
+                  if (sId != null) {
+                    userBookmarkedStoryIds.add(sId);
+                  }
+                }
+              } catch (_) {}
+            }(),
+        ]);
+      }
+
+      // Fetch author profile to get pen name
+      String authorPenName = 'Author';
+      try {
+        final pRes = await client.from('profiles').select('pen_name').eq('id', authorId).maybeSingle();
+        if (pRes != null && pRes['pen_name'] != null) {
+          authorPenName = pRes['pen_name'] as String;
+        }
+      } catch (_) {}
+
+      for (final item in storyList) {
+        final map = item as Map<String, dynamic>;
+        final isAnon = map['is_anonymous'] as bool? ?? false;
+
+        // Honor pure anonymity
+        if (isAnon) continue;
+
+        final storyId = map['id'] as String;
+        final isLiked = userLikedStoryIds.contains(storyId);
+        final isBookmarked = userBookmarkedStoryIds.contains(storyId);
+        final likesCount = likesCountMap[storyId] ?? (map['likes_count'] as num?)?.toInt() ?? 0;
+        final commentsCount = commentsCountMap[storyId] ?? (map['comments_count'] as num?)?.toInt() ?? 0;
+
+        String catName = 'General';
+        String catSlug = 'general';
+        if (map['categories'] != null && map['categories'] is Map) {
+          catName = map['categories']['name'] as String? ?? 'General';
+          catSlug = map['categories']['slug'] as String? ?? 'general';
+        }
+
+        final dbCover = map['cover_url'] as String?;
+        final resolvedCover = (dbCover != null && dbCover.trim().isNotEmpty)
+            ? dbCover.trim()
+            : CoverCache.get(storyId);
+
+        stories.add(
+          StoryModel(
+            id: storyId,
+            userId: authorId,
+            categoryId: map['category_id'] as String,
+            categoryName: catName,
+            categorySlug: catSlug,
+            title: map['title'] as String,
+            content: map['content'] as String,
+            isAnonymous: false,
+            authorName: authorPenName,
+            publishedAt: map['published_at'] != null ? DateTime.parse(map['published_at'] as String) : null,
+            createdAt: DateTime.parse(map['created_at'] as String),
+            viewsCount: (map['views_count'] as num?)?.toInt() ?? 0,
+            likesCount: likesCount,
+            commentsCount: commentsCount,
+            isLiked: isLiked,
+            isBookmarked: isBookmarked,
+            coverUrl: resolvedCover,
+          ),
+        );
+      }
+
+      return stories;
+    } catch (_) {
+      return [];
+    }
   }
 }

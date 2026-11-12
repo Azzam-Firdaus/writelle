@@ -93,6 +93,12 @@ void main() {
       final restored = UserProfileModel.fromMap(map);
       expect(restored.id, equals(profile.id));
       expect(restored.penName, equals(profile.penName));
+      expect(restored.role, equals('user'));
+      expect(restored.isAdmin, isFalse);
+
+      final adminProfile = profile.copyWith(role: 'admin');
+      expect(adminProfile.isAdmin, isTrue);
+      expect(adminProfile.toMap()['role'], equals('admin'));
     });
 
     test('CommentModel extracts author pen name from nested profile join', () {

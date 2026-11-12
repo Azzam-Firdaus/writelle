@@ -21,10 +21,12 @@ class AnonymityToggle extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: isAnonymous ? AppColors.surfaceWarm : AppColors.surfaceLight,
+        color: isAnonymous ? AppColors.surfaceWarmColor(context) : AppColors.surface(context),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: isAnonymous ? AppColors.accentSubtle.withValues(alpha: 0.4) : AppColors.borderLight,
+          color: isAnonymous
+              ? AppColors.burntSienna.withValues(alpha: 0.3)
+              : AppColors.borderColor(context),
         ),
       ),
       child: Row(
@@ -34,14 +36,14 @@ class AnonymityToggle extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: isAnonymous
-                  ? AppColors.accentPrimary.withValues(alpha: 0.12)
-                  : AppColors.surfaceWarm,
+                  ? AppColors.burntSienna.withValues(alpha: 0.12)
+                  : AppColors.surfaceWarmColor(context),
               shape: BoxShape.circle,
             ),
             child: Icon(
               isAnonymous ? Icons.shield_outlined : Icons.edit_note_outlined,
               size: 20,
-              color: isAnonymous ? AppColors.accentPrimary : AppColors.textPrimary,
+              color: isAnonymous ? AppColors.burntSienna : AppColors.textPrimaryColor(context),
             ),
           ),
           const SizedBox(width: 12),
@@ -54,7 +56,7 @@ class AnonymityToggle extends StatelessWidget {
                   isAnonymous ? 'Publishing Anonymously' : 'Publishing as $penName',
                   style: AppTypography.uiBodyMedium.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: AppColors.textPrimaryColor(context),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -63,7 +65,7 @@ class AnonymityToggle extends StatelessWidget {
                       ? 'Your name and profile remain completely private.'
                       : 'Your story will be linked to your pen name alias.',
                   style: AppTypography.captionMeta.copyWith(
-                    color: AppColors.textSecondary,
+                    color: AppColors.textSecondaryColor(context),
                   ),
                 ),
               ],
@@ -71,7 +73,7 @@ class AnonymityToggle extends StatelessWidget {
           ),
           Switch.adaptive(
             value: isAnonymous,
-            activeThumbColor: AppColors.accentPrimary,
+            activeTrackColor: AppColors.burntSienna,
             onChanged: onChanged,
           ),
         ],
