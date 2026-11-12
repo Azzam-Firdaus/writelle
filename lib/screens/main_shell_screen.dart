@@ -68,18 +68,6 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
           .onPostgresChanges(
             event: PostgresChangeEvent.all,
             schema: 'public',
-            table: 'comments',
-            callback: (_) {
-              if (mounted) {
-                ref.invalidate(feedStoriesProvider);
-                ref.invalidate(bookmarkedStoriesProvider);
-                ref.invalidate(myPublishedStoriesProvider);
-              }
-            },
-          )
-          .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
             table: 'bookmarks',
             callback: (_) {
               if (mounted) {

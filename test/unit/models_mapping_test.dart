@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:writtle/models/category_model.dart';
-import 'package:writtle/models/comment_model.dart';
 import 'package:writtle/models/story_model.dart';
 import 'package:writtle/models/user_profile_model.dart';
 
@@ -99,23 +98,6 @@ void main() {
       final adminProfile = profile.copyWith(role: 'admin');
       expect(adminProfile.isAdmin, isTrue);
       expect(adminProfile.toMap()['role'], equals('admin'));
-    });
-
-    test('CommentModel extracts author pen name from nested profile join', () {
-      final map = {
-        'id': 'comment-uuid-1',
-        'story_id': 'story-uuid-1',
-        'user_id': 'user-uuid-888',
-        'content': 'Your words resonated deeply with me. Stay strong.',
-        'created_at': '2026-10-23T07:00:00Z',
-        'profiles': {'pen_name': 'EmpatheticSoul'},
-      };
-
-      final comment = CommentModel.fromMap(map);
-
-      expect(comment.id, equals('comment-uuid-1'));
-      expect(comment.content, equals('Your words resonated deeply with me. Stay strong.'));
-      expect(comment.authorPenName, equals('EmpatheticSoul'));
     });
   });
 }

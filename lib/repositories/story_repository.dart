@@ -4,7 +4,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/cache/cover_cache.dart';
 import '../models/category_model.dart';
-import '../models/comment_model.dart';
 import '../models/story_model.dart';
 import 'admin_repository.dart';
 
@@ -196,7 +195,6 @@ class StoryRepository {
     final stories = <StoryModel>[];
 
     final Map<String, int> likesCountMap = {};
-    final Map<String, int> commentsCountMap = {};
     final Set<String> likedStoryIds = {};
     final Set<String> bookmarkedStoryIds = {};
 
@@ -221,20 +219,6 @@ class StoryRepository {
                   if (currentUserId != null && uId == currentUserId) {
                     likedStoryIds.add(sId);
                   }
-                }
-              }
-            } catch (_) {}
-          }(),
-          () async {
-            try {
-              final commentsRes = await client
-                  .from('comments')
-                  .select('story_id')
-                  .inFilter('story_id', storyIds);
-              for (final item in commentsRes as List) {
-                final sId = item['story_id'] as String?;
-                if (sId != null) {
-                  commentsCountMap[sId] = (commentsCountMap[sId] ?? 0) + 1;
                 }
               }
             } catch (_) {}
@@ -268,7 +252,6 @@ class StoryRepository {
       final isBookmarked = bookmarkedStoryIds.contains(storyId);
 
       map['likes_count'] = likesCountMap[storyId] ?? (map['likes_count'] as num?)?.toInt() ?? 0;
-      map['comments_count'] = commentsCountMap[storyId] ?? (map['comments_count'] as num?)?.toInt() ?? 0;
 
       stories.add(StoryModel.fromMap(map, isLiked: isLiked, isBookmarked: isBookmarked));
     }
@@ -725,7 +708,6 @@ class StoryRepository {
     }
 
     final Map<String, int> likesCountMap = {};
-    final Map<String, int> commentsCountMap = {};
     final Set<String> likedStoryIds = {};
 
     if (storyIds.isNotEmpty) {
@@ -749,20 +731,6 @@ class StoryRepository {
               }
             } catch (_) {}
           }(),
-          () async {
-            try {
-              final commentsRes = await client
-                  .from('comments')
-                  .select('story_id')
-                  .inFilter('story_id', storyIds);
-              for (final item in commentsRes as List) {
-                final sId = item['story_id'] as String?;
-                if (sId != null) {
-                  commentsCountMap[sId] = (commentsCountMap[sId] ?? 0) + 1;
-                }
-              }
-            } catch (_) {}
-          }(),
         ]);
       } catch (_) {}
     }
@@ -771,159 +739,9 @@ class StoryRepository {
       final map = Map<String, dynamic>.from(item as Map<String, dynamic>);
       final storyId = map['id'] as String;
       map['likes_count'] = likesCountMap[storyId] ?? (map['likes_count'] as num?)?.toInt() ?? 0;
-      map['comments_count'] = commentsCountMap[storyId] ?? (map['comments_count'] as num?)?.toInt() ?? 0;
       final isLiked = likedStoryIds.contains(storyId);
       return StoryModel.fromMap(map, isLiked: isLiked, isBookmarked: true);
     }).toList();
-  }
-
-  /// Fetches comments for a story.
-  Future<List<CommentModel>> getComments(String storyId) async {
-    final client = _supabase;
-    if (client == null) return [];
-
-    try {
-      final commentsRes = await client
-          .from('comments')
-          .select()
-          .eq('story_id', storyId)
-          .order('created_at', ascending: true);
-
-      final commentsList = commentsRes as List;
-      if (commentsList.isEmpty) return [];
-
-      // Extract distinct user IDs to look up author pen names
-      final userIds = commentsList
-          .map((c) => (c as Map<String, dynamic>)['user_id'] as String?)
-          .where((id) => id != null && id.isNotEmpty)
-          .cast<String>()
-          .toSet()
-          .toList();
-
-      final penNames = <String, String>{};
-      if (userIds.isNotEmpty) {
-        try {
-          final profilesRes = await client
-              .from('profiles')
-              .select('id, pen_name')
-              .filter('id', 'in', userIds);
-          for (final p in profilesRes as List) {
-            final pMap = p as Map<String, dynamic>;
-            final pid = pMap['id'] as String?;
-            final pname = pMap['pen_name'] as String?;
-            if (pid != null && pname != null) {
-              penNames[pid] = pname;
-            }
-          }
-        } catch (_) {
-          // If profile lookup encounters any issue, fallback gracefully
-        }
-      }
-
-      final allComments = commentsList.map((item) {
-        final map = Map<String, dynamic>.from(item as Map<String, dynamic>);
-        final uid = map['user_id'] as String?;
-        final authorPenName = (uid != null ? penNames[uid] : null) ?? 'Author';
-        map['profiles'] = {'pen_name': authorPenName};
-        return CommentModel.fromMap(map);
-      }).toList();
-
-      // Quick lookup map by ID
-      final commentById = <String, CommentModel>{
-        for (final c in allComments) c.id: c,
-      };
-
-      // Helper to trace any parent ID up to the top-level root comment ID
-      String findRootId(String startId) {
-        final visited = <String>{};
-        var curr = startId;
-        while (visited.add(curr)) {
-          final parent = commentById[curr];
-          if (parent == null ||
-              parent.parentCommentId == null ||
-              parent.parentCommentId!.isEmpty) {
-            return curr;
-          }
-          curr = parent.parentCommentId!;
-        }
-        return curr;
-      }
-
-      final rootComments = <CommentModel>[];
-      final repliesByRootId = <String, List<CommentModel>>{};
-
-      for (final comment in allComments) {
-        if (comment.parentCommentId != null &&
-            comment.parentCommentId!.isNotEmpty) {
-          final directParent = commentById[comment.parentCommentId];
-          final rootId = findRootId(comment.parentCommentId!);
-
-          // Enrich reply with replyingToAuthor if direct parent exists
-          final enrichedReply = comment.copyWith(
-            replyingToAuthor: directParent?.authorPenName,
-          );
-
-          repliesByRootId.putIfAbsent(rootId, () => []).add(enrichedReply);
-        } else {
-          rootComments.add(comment);
-        }
-      }
-
-      // Safeguard: If any replies point to a root ID that wasn't found in rootComments,
-      // promote the first reply as root so it never vanishes from the screen!
-      for (final entry in repliesByRootId.entries) {
-        if (!rootComments.any((r) => r.id == entry.key)) {
-          if (entry.value.isNotEmpty) {
-            final first = entry.value.first;
-            final rest = entry.value.sublist(1);
-            rootComments.add(first.copyWith(replies: rest));
-          }
-        }
-      }
-
-      // Attach replies into their respective root comments
-      return rootComments.map((root) {
-        return root.copyWith(replies: repliesByRootId[root.id] ?? []);
-      }).toList();
-    } catch (_) {
-      return [];
-    }
-  }
-
-  /// Submits a comment or a reply to an existing comment.
-  Future<void> addComment(
-    String storyId,
-    String content, {
-    String? parentCommentId,
-  }) async {
-    final client = _supabase;
-    if (client == null) throw Exception('Database connection not initialized.');
-
-    final user = client.auth.currentUser;
-    if (user == null) throw Exception('Please log in to comment.');
-
-    final insertData = <String, dynamic>{
-      'story_id': storyId,
-      'user_id': user.id,
-      'content': content.trim(),
-    };
-
-    if (parentCommentId != null && parentCommentId.isNotEmpty) {
-      insertData['parent_comment_id'] = parentCommentId;
-    }
-
-    try {
-      await client.from('comments').insert(insertData);
-    } catch (e) {
-      // In case parent_comment_id column doesn't exist yet, fallback gracefully
-      if (insertData.containsKey('parent_comment_id') &&
-          e.toString().contains('parent_comment_id')) {
-        insertData.remove('parent_comment_id');
-        await client.from('comments').insert(insertData);
-      } else {
-        rethrow;
-      }
-    }
   }
 
   /// Submits a report for a story.
@@ -989,7 +807,6 @@ class StoryRepository {
 
       final Map<String, int> likesCountMap = {};
       final Set<String> userLikedStoryIds = {};
-      final Map<String, int> commentsCountMap = {};
       final Set<String> userBookmarkedStoryIds = {};
 
       if (nonAnonStoryIds.isNotEmpty) {
@@ -1008,20 +825,6 @@ class StoryRepository {
                   if (currentUserId != null && uId == currentUserId) {
                     userLikedStoryIds.add(sId);
                   }
-                }
-              }
-            } catch (_) {}
-          }(),
-          () async {
-            try {
-              final commentsRes = await client
-                  .from('comments')
-                  .select('story_id')
-                  .inFilter('story_id', nonAnonStoryIds);
-              for (final item in commentsRes as List) {
-                final sId = item['story_id'] as String?;
-                if (sId != null) {
-                  commentsCountMap[sId] = (commentsCountMap[sId] ?? 0) + 1;
                 }
               }
             } catch (_) {}
@@ -1065,7 +868,6 @@ class StoryRepository {
         final isLiked = userLikedStoryIds.contains(storyId);
         final isBookmarked = userBookmarkedStoryIds.contains(storyId);
         final likesCount = likesCountMap[storyId] ?? (map['likes_count'] as num?)?.toInt() ?? 0;
-        final commentsCount = commentsCountMap[storyId] ?? (map['comments_count'] as num?)?.toInt() ?? 0;
 
         String catName = 'General';
         String catSlug = 'general';
@@ -1094,7 +896,6 @@ class StoryRepository {
             createdAt: DateTime.parse(map['created_at'] as String),
             viewsCount: (map['views_count'] as num?)?.toInt() ?? 0,
             likesCount: likesCount,
-            commentsCount: commentsCount,
             isLiked: isLiked,
             isBookmarked: isBookmarked,
             coverUrl: resolvedCover,

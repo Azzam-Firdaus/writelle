@@ -24,7 +24,6 @@ class StoryCard extends StatelessWidget {
   final VoidCallback? onBookmarkToggle;
   final Widget? trailing;
   final VoidCallback? onLikeTap;
-  final VoidCallback? onCommentTap;
   final bool? showBookmark;
   final bool showActions;
   final bool? isAuthenticated;
@@ -36,7 +35,6 @@ class StoryCard extends StatelessWidget {
     this.onBookmarkTap,
     this.onBookmarkToggle,
     this.onLikeTap,
-    this.onCommentTap,
     this.showBookmark,
     this.showActions = true,
     this.isAuthenticated,

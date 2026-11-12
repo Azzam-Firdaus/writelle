@@ -45,7 +45,6 @@ class SearchScreen extends ConsumerStatefulWidget {
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   final _searchController = TextEditingController();
   SearchScope _selectedScope = SearchScope.stories;
-  String _selectedCategorySlug = 'all';
   StorySortOption _selectedSort = StorySortOption.latest;
   Timer? _debounceTimer;
 
@@ -71,7 +70,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final categoriesAsync = ref.watch(categoriesProvider);
     final storiesAsync = ref.watch(feedStoriesProvider);
 
     return WrittleAmbientBackground(
@@ -239,37 +237,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   ],
                 ),
               ),
-
-              // 4. Topics Bar
-              categoriesAsync.when(
-                loading: () => const SizedBox(height: 8),
-                error: (_, _) => const SizedBox(height: 8),
-                data: (categories) {
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 6, 18, 10),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      child: Row(
-                        children: [
-                          _buildTopicPill(
-                            label: 'All Topics',
-                            isSelected: _selectedCategorySlug == 'all',
-                            onTap: () => setState(() => _selectedCategorySlug = 'all'),
-                          ),
-                          ...categories.map(
-                            (c) => _buildTopicPill(
-                              label: c.name,
-                              isSelected: _selectedCategorySlug == c.slug,
-                              onTap: () => setState(() => _selectedCategorySlug = c.slug),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
+              const SizedBox(height: 6),
             ],
 
             Divider(
@@ -315,18 +283,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               s.content.toLowerCase().contains(query);
         }).toList();
 
-        if (_selectedCategorySlug != 'all') {
-          filtered = filtered.where((s) => s.categorySlug == _selectedCategorySlug).toList();
-        }
-
         switch (_selectedSort) {
           case StorySortOption.latest:
             filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
             break;
           case StorySortOption.popular:
             filtered.sort((a, b) =>
-                (b.viewsCount + b.likesCount * 2 + b.commentsCount * 3)
-                    .compareTo(a.viewsCount + a.likesCount * 2 + a.commentsCount * 3));
+                (b.viewsCount + b.likesCount * 3)
+                    .compareTo(a.viewsCount + a.likesCount * 3));
             break;
           case StorySortOption.mostLiked:
             filtered.sort((a, b) => b.likesCount.compareTo(a.likesCount));
@@ -519,39 +483,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           },
         );
       },
-    );
-  }
-
-  Widget _buildTopicPill({
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 6.0),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.burntSienna.withValues(alpha: 0.14) : Colors.transparent,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isSelected ? AppColors.burntSienna : AppColors.borderLight,
-              width: 1,
-            ),
-          ),
-          child: Text(
-            label,
-            style: AppTypography.captionMeta.copyWith(
-              fontSize: 11.5,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              color: isSelected ? AppColors.burntSienna : AppColors.textSecondaryColor(context),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

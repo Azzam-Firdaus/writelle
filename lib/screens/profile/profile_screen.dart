@@ -82,18 +82,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
           .onPostgresChanges(
             event: PostgresChangeEvent.all,
             schema: 'public',
-            table: 'comments',
-            callback: (_) {
-              if (mounted) {
-                ref.invalidate(myPublishedStoriesProvider);
-                ref.invalidate(myDraftStoriesProvider);
-                ref.invalidate(feedStoriesProvider);
-              }
-            },
-          )
-          .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
             table: 'bookmarks',
             callback: (_) {
               if (mounted) {

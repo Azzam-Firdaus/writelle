@@ -45,7 +45,7 @@ class WrittleAuthGuard {
       builder: (dialogCtx) => _WrittleAuthDialog(
         title: title ?? 'Sign in to Writelle',
         message: message ??
-            'Please sign in or create an account to like, bookmark, comment, or write stories in Writelle.',
+            'Please sign in or create an account to like, bookmark, or write stories in Writelle.',
         onSuccess: onSuccess,
       ),
     );

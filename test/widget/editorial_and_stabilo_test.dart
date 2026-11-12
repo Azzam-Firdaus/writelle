@@ -440,9 +440,6 @@ void main() {
 
       // Verify no AspectRatio widget (cover banner) is rendered
       expect(find.byType(AspectRatio), findsNothing);
-
-      // Verify no comment pill is displayed on featured story
-      expect(find.byType(WrittleCommentPill), findsNothing);
     });
   });
 }

@@ -16,7 +16,6 @@ class WrittleFeaturedStory extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback? onLikeTap;
   final VoidCallback? onBookmarkTap;
-  final VoidCallback? onCommentTap;
   final bool showBookmark;
   final bool? isAuthenticated;
 
@@ -26,7 +25,6 @@ class WrittleFeaturedStory extends StatelessWidget {
     required this.onTap,
     this.onLikeTap,
     this.onBookmarkTap,
-    this.onCommentTap,
     this.showBookmark = false,
     this.isAuthenticated,
   });

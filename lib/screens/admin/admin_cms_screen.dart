@@ -1758,10 +1758,6 @@ class _AdminCmsScreenState extends ConsumerState<AdminCmsScreen>
               const Icon(Icons.favorite_border, size: 14, color: AppColors.textTertiary),
               const SizedBox(width: 4),
               Text('${story.likesCount}', style: AppTypography.captionMeta),
-              const SizedBox(width: 14),
-              const Icon(Icons.chat_bubble_outline, size: 14, color: AppColors.textTertiary),
-              const SizedBox(width: 4),
-              Text('${story.commentsCount}', style: AppTypography.captionMeta),
               const Spacer(),
               Text(
                 story.readingTime,

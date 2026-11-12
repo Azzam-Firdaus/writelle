@@ -73,7 +73,6 @@ void main() {
     expect(find.byType(StoryCard), findsOneWidget);
     expect(find.text('Reflections'), findsOneWidget);
     expect(find.byType(WrittleLikePill), findsNothing);
-    expect(find.byType(WrittleCommentPill), findsNothing);
     expect(find.byType(WrittleBookmarkPill), findsNothing);
     expect(find.byType(PopupMenuButton<String>), findsOneWidget);
   });

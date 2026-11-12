@@ -408,7 +408,6 @@ class AuthRepository {
 
     final Map<String, int> likesCountMap = {};
     final Set<String> userLikedStoryIds = {};
-    final Map<String, int> commentsCountMap = {};
     final Set<String> userBookmarkedStoryIds = {};
 
     if (storyIds.isNotEmpty) {
@@ -434,24 +433,7 @@ class AuthRepository {
             debugPrint('[AuthRepository] getMyStories likes notice: $e');
           }
         }(),
-        // 2. Fetch comments count
-        () async {
-          try {
-            final commentsRes = await client
-                .from('comments')
-                .select('story_id')
-                .inFilter('story_id', storyIds);
-            for (final item in commentsRes as List) {
-              final sId = item['story_id'] as String?;
-              if (sId != null) {
-                commentsCountMap[sId] = (commentsCountMap[sId] ?? 0) + 1;
-              }
-            }
-          } catch (e) {
-            debugPrint('[AuthRepository] getMyStories comments notice: $e');
-          }
-        }(),
-        // 3. Fetch bookmarks for current user
+        // 2. Fetch bookmarks for current user
         () async {
           try {
             final bookmarksRes = await client
@@ -488,7 +470,6 @@ class AuthRepository {
           : CoverCache.get(storyId);
 
       final likesCount = likesCountMap[storyId] ?? (map['likes_count'] as num?)?.toInt() ?? 0;
-      final commentsCount = commentsCountMap[storyId] ?? (map['comments_count'] as num?)?.toInt() ?? 0;
       final isLiked = userLikedStoryIds.contains(storyId);
       final isBookmarked = userBookmarkedStoryIds.contains(storyId);
 
@@ -506,7 +487,6 @@ class AuthRepository {
         createdAt: DateTime.parse(map['created_at'] as String),
         viewsCount: (map['views_count'] as num?)?.toInt() ?? 0,
         likesCount: likesCount,
-        commentsCount: commentsCount,
         isLiked: isLiked,
         isBookmarked: isBookmarked,
         coverUrl: resolvedCover,
